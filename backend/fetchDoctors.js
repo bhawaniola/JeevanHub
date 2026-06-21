@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 
-const MDB = 'mongodb+srv://bhawaniola08:8KKvmL6nCf5zSbiN@cluster0.miwtf.mongodb.net/ayurveda';
+require('dotenv').config();
+
+const MDB = process.env.MDB;
 
 mongoose.connect(MDB, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(async () => {
