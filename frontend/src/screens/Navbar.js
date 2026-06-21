@@ -7,7 +7,7 @@ import menu from "../media/menu.svg";
 import locationIcon from "../media/location.png";
 import defaultProfilePic from "../media/default-profile.png"; // Default profile picture
 
-const API_KEY = "f08bb887cc0d42bb8b9fb21993c3a6d3"; // Your OpenCage API key
+const API_KEY = process.env.REACT_APP_OPENCAGE_API_KEY;
 
 function NavBar() {
   const [showMenu, setShowMenu] = useState(false);

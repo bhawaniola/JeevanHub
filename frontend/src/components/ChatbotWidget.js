@@ -28,7 +28,7 @@ const ChatbotWidget = () => {
     };
 
     try {
-      const res = await fetch(`${process.env.AYURVEDA_NLP_URL}/askanythingayurveda`, {
+      const res = await fetch(`${process.env.REACT_APP_AYURVEDA_NLP_URL}/askanythingayurveda`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

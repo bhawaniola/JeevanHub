@@ -11,6 +11,11 @@ mongoose.connect(MDB, { useNewUrlParser: true, useUnifiedTopology: true })
     
     if (admins.length === 0) {
       console.log("No admins found in the database. Creating one...");
+      const adminEmail = process.env.ADMIN_EMAIL;
+      if (!adminEmail) {
+          console.error("❌ Error: ADMIN_EMAIL environment variable is required. Please set it in your .env file.");
+          process.exit(1);
+      }
       const adminPassword = process.env.ADMIN_PASSWORD;
       if (!adminPassword) {
           console.error("❌ Error: ADMIN_PASSWORD environment variable is required. Please set it in your .env file.");
@@ -20,13 +25,13 @@ mongoose.connect(MDB, { useNewUrlParser: true, useUnifiedTopology: true })
       await db.collection('admins').insertOne({
           firstName: "Super",
           lastName: "Admin",
-          email: "admin@jeevanhub.com",
+          email: adminEmail,
           password: hashedPassword,
           role: "admin",
           createdAt: new Date(),
           updatedAt: new Date()
       });
-      console.log(`Created default admin: Email: admin@jeevanhub.com, Password: ${adminPassword}`);
+      console.log(`Created default admin: Email: ${adminEmail}, Password: ${adminPassword}`);
     } else {
       console.log(`Found ${admins.length} admin(s) in the database:`);
       admins.forEach(admin => {

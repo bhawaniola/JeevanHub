@@ -10,7 +10,7 @@ import { AuthContext } from "../../context/AuthContext";
 import menu from "../../media/menu.svg";
 import menu_close from "../../media/menu-close.svg";
 
-const API_KEY = "f08bb887cc0d42bb8b9fb21993c3a6d3"; // Replace with your OpenCage API key
+const API_KEY = process.env.REACT_APP_OPENCAGE_API_KEY;
 
 function PatientNavBar() {
 	const navigate = useNavigate();

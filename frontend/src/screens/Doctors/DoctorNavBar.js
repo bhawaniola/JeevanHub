@@ -10,7 +10,7 @@ import notificationIcon from "../../media/notifications.png";
 import menu_close from "../../media/menu-close.svg";
 import menu from "../../media/menu.svg";
 
-const API_KEY = "f08bb887cc0d42bb8b9fb21993c3a6d3"; // Your OpenCage API key
+const API_KEY = process.env.REACT_APP_OPENCAGE_API_KEY;
 
 function DoctorNavBar() {
 	const { auth, setAuth } = useContext(AuthContext); // Get auth context to access user info
