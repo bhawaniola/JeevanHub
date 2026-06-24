@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { useParams } from "react-router-dom";
+import { AuthContext } from "../../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import DoctorDetails from './DoctorDetails';
 import AppointmentsTab from './Appointment';
@@ -23,6 +24,7 @@ import {
 } from 'lucide-react';
 
 const DoctorFullDetails = () => {
+	const { auth } = useContext(AuthContext);
 	const { id: doctorId } = useParams();
 	const [doctor, setDoctor] = useState(null);
 	const [loadingDoctor, setLoadingDoctor] = useState(true);
@@ -34,8 +36,14 @@ const DoctorFullDetails = () => {
 	useEffect(() => {
 		const fetchDoctorById = async () => {
 			try {
+				const token = localStorage.getItem("token");
 				const res = await fetch(
-					`${process.env.REACT_APP_AYURVEDA_BACKEND_URL}/api/doctors/getDoctorById/${doctorId}`
+					`${process.env.REACT_APP_AYURVEDA_BACKEND_URL}/api/doctors/getDoctorById/${doctorId}`,
+					{
+						headers: {
+							Authorization: `Bearer ${token}`
+						}
+					}
 				);
 
 				if (!res.ok) {
@@ -486,11 +494,15 @@ const DoctorFullDetails = () => {
 								}}>
 									{doctor.approvalStatus || 'Pending'}
 								</span>
-								{doctor.approvalStatus !== 'Approved' && (
-									<button onClick={() => handleVerify('Approved')} style={{ backgroundColor: "#28a745", color: "white", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer" }}>Approve</button>
-								)}
-								{doctor.approvalStatus !== 'Rejected' && (
-									<button onClick={() => handleVerify('Rejected')} style={{ backgroundColor: "#dc3545", color: "white", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer" }}>Reject</button>
+								{auth?.user?.role === 'admin' && auth?.user?.permissions?.manageDoctors && (
+									<>
+										{doctor.approvalStatus !== 'Approved' && (
+											<button onClick={() => handleVerify('Approved')} style={{ backgroundColor: "#28a745", color: "white", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer" }}>Approve</button>
+										)}
+										{doctor.approvalStatus !== 'Rejected' && (
+											<button onClick={() => handleVerify('Rejected')} style={{ backgroundColor: "#dc3545", color: "white", border: "none", padding: "6px 12px", borderRadius: "4px", cursor: "pointer" }}>Reject</button>
+										)}
+									</>
 								)}
 							</div>
 						</div>

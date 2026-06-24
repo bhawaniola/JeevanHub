@@ -14,8 +14,14 @@ const Transactions = ({ doctorId }) => {
 	useEffect(() => {
 		const fetchOrders = async () => {
 			try {
+				const token = localStorage.getItem("token");
 				const res = await fetch(
-					`${process.env.REACT_APP_AYURVEDA_BACKEND_URL}/api/orders/getOrdersByBuyerId/${doctorId}`
+					`${process.env.REACT_APP_AYURVEDA_BACKEND_URL}/api/orders/getOrdersByBuyerId/${doctorId}`,
+					{
+						headers: {
+							Authorization: `Bearer ${token}`
+						}
+					}
 				);
 
 				if (!res.ok) {
@@ -43,8 +49,14 @@ const Transactions = ({ doctorId }) => {
 	useEffect(() => {
 		const fetchDoctorBookings = async () => {
 			try {
+				const token = localStorage.getItem("token");
 				const res = await fetch(
-					`${process.env.REACT_APP_AYURVEDA_BACKEND_URL}/api/bookings/doctor/${doctorId}`
+					`${process.env.REACT_APP_AYURVEDA_BACKEND_URL}/api/bookings/doctor/${doctorId}`,
+					{
+						headers: {
+							Authorization: `Bearer ${token}`
+						}
+					}
 				);
 
 				if (!res.ok) {

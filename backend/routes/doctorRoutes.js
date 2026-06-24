@@ -13,7 +13,8 @@ const { getAllDoctors,
     getAllDoctorsData, 
     updateDoctor,
     getDoctorById,
-    bulkDeleteDoctors } = require("../controllers/doctorController");
+    bulkDeleteDoctors,
+    verifyDoctor } = require("../controllers/doctorController");
 
 // Public Routes
 router.get("/", auth, getAllDoctors); 
@@ -255,5 +256,8 @@ router.get("/getDoctorById/:id", auth, getDoctorById);
 
 // update doctor details
 router.put("/updateDoctor/:id", auth, updateDoctor);
+
+// verify doctor
+router.put("/verify/:id", auth, verifyDoctor);
 
 module.exports = router;

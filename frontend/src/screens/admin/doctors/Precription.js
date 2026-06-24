@@ -11,8 +11,14 @@ const DoctorPrescriptions = ({ doctorId }) => {
 	useEffect(() => {
 		const fetchDoctorBookings = async () => {
 			try {
+				const token = localStorage.getItem("token");
 				const res = await fetch(
-					`${process.env.REACT_APP_AYURVEDA_BACKEND_URL}/api/bookings/doctor/${doctorId}`
+					`${process.env.REACT_APP_AYURVEDA_BACKEND_URL}/api/bookings/doctor/${doctorId}`,
+					{
+						headers: {
+							Authorization: `Bearer ${token}`
+						}
+					}
 				);
 
 				if (!res.ok) {

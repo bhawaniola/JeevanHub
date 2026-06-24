@@ -21,7 +21,7 @@ const DetailsTab = ({ doctor }) => {
 							<span className="label">Education:</span>{" "}
 							{doctor.education || "Not specified"}
 						</li>
-						{/* <li>
+						<li>
 							<span className="label">Certificate:</span>{" "}
 							{doctor.certificate ? (
 								<a
@@ -31,14 +31,6 @@ const DetailsTab = ({ doctor }) => {
 								>
 									View Certificate
 								</a>
-							) : (
-								"Not provided"
-							)}
-						</li> */}
-						<li>
-							<span className="label">Certificate:</span>{" "}
-							{doctor.designation ? (
-								doctor.designation
 							) : (
 								"Not provided"
 							)}
