@@ -249,19 +249,7 @@ const CheckoutScreen = () => {
 				// Save order ID for reference
 				setOrderId(currentOrderId);
 
-				// Create notification for new order if API available
-				if (notificationsAvailable) {
-					const notificationMessage = `Your order #${currentOrderId} has been placed successfully.`;
-					await createNotification(currentOrderId, notificationMessage);
-
-					// If the order contains items from different retailers, create notifications for each retailer
-					const retailerIds = [...new Set(cartItems.map(item => item.retailerId))];
-					if (retailerIds.length > 1) {
-						// Add a notification that the order contains items from multiple retailers
-						const multiRetailerMsg = `Your order #${currentOrderId} contains items from ${retailerIds.length} different retailers.`;
-						await createNotification(currentOrderId, multiRetailerMsg);
-					}
-				}
+				// Notifications are now generated securely on the backend
 
 				// If online payment, get QR code from response
 				if (paymentMethod === 'onlinePayment') {

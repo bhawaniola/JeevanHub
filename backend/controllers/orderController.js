@@ -9,6 +9,7 @@ const Patient = require('../models/Patient');
 const Doctor = require('../models/Doctor');
 const path = require('path');
 const fs = require('fs');
+const notificationController = require('./notificationController');
 
 
 exports.updateOrderReview = async (req, res) => {
@@ -22,6 +23,9 @@ exports.updateOrderReview = async (req, res) => {
         }
         if (existingOrder.buyer.buyerId.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: "Not authorized to review this order" });
+        }
+        if (existingOrder.orderStatus !== "delivered") {
+            return res.status(400).json({ message: "Reviews can only be submitted for delivered orders" });
         }
 
         // Validate required fields
@@ -42,8 +46,7 @@ exports.updateOrderReview = async (req, res) => {
             orderId,
             {
                 $set: {
-                    review: reviewData,
-                    orderStatus: "delivered", 
+                    review: reviewData
                 },
             },
             { new: true }
@@ -64,6 +67,9 @@ exports.updateOrderReview = async (req, res) => {
 };
 
 exports.createOrder = async (req, res) => {
+    if (req.user.role !== 'patient') {
+        return res.status(403).json({ message: "Access denied. Only patients can create orders." });
+    }
     try {
         const { items, totalPrice, buyer, shippingAddress, paymentMethod } = req.body;
 
@@ -113,6 +119,29 @@ exports.createOrder = async (req, res) => {
                 // Race condition - stock was claimed by another order or insufficient
                 return res.status(409).json({ message: 'Stock no longer available for one or more items' });
             }
+        }
+
+        // C4-8: Generate notification securely from the backend
+        const notificationMessage = `Your order #${newOrder._id} has been placed successfully.`;
+        await notificationController.createNotification(
+            req.user._id,
+            req.user.role,
+            newOrder._id,
+            notificationMessage,
+            'order'
+        );
+
+        // Notify if multiple retailers
+        const retailerIds = [...new Set(formattedItems.map(item => item.retailerId))].filter(Boolean);
+        if (retailerIds.length > 1) {
+            const multiRetailerMsg = `Your order #${newOrder._id} contains items from ${retailerIds.length} different retailers.`;
+            await notificationController.createNotification(
+                req.user._id,
+                req.user.role,
+                newOrder._id,
+                multiRetailerMsg,
+                'order'
+            );
         }
 
         res.status(201).json(newOrder);

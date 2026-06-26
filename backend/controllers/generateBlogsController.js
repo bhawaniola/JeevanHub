@@ -35,11 +35,21 @@ exports.generateBlogs = async (req, res) => {
         console.log("Incoming blog:", req.body);
 
         // Ensure we still require content.text for the incoming Markdown
-        const { title, url, content, tags, user, timestamp } = req.body;
+        const { title, url, content, tags, timestamp } = req.body;
 
-        if (!title || !url || !content?.text || !user?.userId || !user?.name) {
+        if (req.user.role !== 'doctor' && req.user.role !== 'admin') {
+            return res.status(403).json({ error: "Access denied. Only doctors and admins can generate blogs." });
+        }
+
+        if (!title || !url || !content?.text) {
             return res.status(400).json({ error: "Missing required fields" });
         }
+
+        // Construct user from req.user securely (C4-6)
+        const user = {
+            userId: req.user._id,
+            name: `${req.user.firstName} ${req.user.lastName}`
+        };
 
         // --- CONVERSION & SANITIZATION STEP ---
         const cleanHtml = await convertMarkdownToHtml(content.text);

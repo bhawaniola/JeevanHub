@@ -7,16 +7,14 @@ const Patient = require("../models/Patient");
 exports.prescribeDiet = async (req, res) => {
 	const {
 		bookingId,
-		patientId,
-		doctorId,
 		dietPlan
 	} = req.body;
 
 	try {
 		// 1. Validate required fields upfront
-		if (!bookingId || !patientId || !doctorId || !dietPlan) {
+		if (!bookingId || !dietPlan) {
 			return res.status(400).json({
-				message: "Missing required fields: bookingId, patientId, doctorId, and dietPlan are all required."
+				message: "Missing required fields: bookingId and dietPlan are required."
 			});
 		}
 
@@ -35,8 +33,9 @@ exports.prescribeDiet = async (req, res) => {
 
 		if (dietYoga) {
 			dietYoga.diet = dietPlan;
-			dietYoga.doctor = doctorId;
-			dietYoga.patient = patientId;
+			// C5-6: Derive IDs securely
+			dietYoga.doctor = req.user._id;
+			dietYoga.patient = booking.patientId;
 			dietYoga.updatedAt = Date.now();
 
 			await dietYoga.save();
@@ -50,8 +49,9 @@ exports.prescribeDiet = async (req, res) => {
 
 			dietYoga = new DietYoga({
 				bookingId: bookingId,
-				patient: patientId,
-				doctor: doctorId,
+				// C5-6: Derive IDs securely
+				patient: booking.patientId,
+				doctor: req.user._id,
 				diet: dietPlan
 			});
 
@@ -72,15 +72,13 @@ exports.prescribeDiet = async (req, res) => {
 exports.prescribeYoga = async (req, res) => {
 	const {
 		bookingId,
-		patientId,
-		doctorId,
 		yogaPlan 
 	} = req.body;
 
 	try {
 		// 1. Validation
-		if (!bookingId || !yogaPlan || !patientId || !doctorId) {
-			return res.status(400).json({ error: "Booking ID, Patient ID, Doctor ID, and Yoga Plan are required" });
+		if (!bookingId || !yogaPlan) {
+			return res.status(400).json({ error: "Booking ID and Yoga Plan are required" });
 		}
 
 		// 2. Check if the booking exists
@@ -98,8 +96,8 @@ exports.prescribeYoga = async (req, res) => {
 			{ bookingId: bookingId },
 			{
 				$set: {
-					patient: patientId, 
-					doctor: doctorId,
+					patient: booking.patientId, // C5-6: derive securely
+					doctor: req.user._id,       // C5-6: derive securely
 					yoga: yogaPlan,
 					updatedAt: Date.now()
 				}

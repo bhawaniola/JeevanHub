@@ -3,6 +3,9 @@ const Patient = require("../models/Patient");
 
 // 1. Submit or Update an Assessment
 exports.submitAssessment = async (req, res) => {
+    if (req.user.role !== 'patient') {
+        return res.status(403).json({ error: 'Access denied. Only patients can submit assessments.' });
+    }
     try {
         const { answers, results } = req.body;
         const patientId = req.user._id;

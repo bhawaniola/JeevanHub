@@ -248,12 +248,39 @@ function PatientList() {
 				alert(`Error: ${data.error}`);
 			}
 		} catch (error) {
-			alert("Failed to save supplements.");
-			console.error(error);
+			console.error("Error saving supplements:", error);
+			alert("Failed to save supplements. Please try again.");
 		}
 	};
 
-	// New function to open diet and yoga modal
+	const handleVerifyPayment = async (bookingId) => {
+		try {
+			const token = localStorage.getItem("token");
+			const response = await fetch(`${process.env.REACT_APP_AYURVEDA_BACKEND_URL}/api/bookings/${bookingId}/verify-payment`, {
+				method: "PUT",
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+
+			const data = await response.json();
+			if (response.ok) {
+				alert("Payment verified successfully!");
+				// Update local state to reflect change
+				const updatedAppointments = previousAppointments.map(app => 
+					app._id === bookingId ? { ...app, paymentStatus: "Completed" } : app
+				);
+				setPreviousAppointments(updatedAppointments);
+			} else {
+				alert(`Error verifying payment: ${data.error}`);
+			}
+		} catch (error) {
+			console.error("Error:", error);
+			alert("Failed to verify payment.");
+		}
+	};
+
+	// Function to fetch and set current appointments details
 	const handleSuggestDietYoga = async (appointmentId) => {
 		// Find the current appointment (only previousAppointments are relevant for suggesting plans)
 		const appointment = previousAppointments.find(app => app._id === appointmentId);
@@ -429,6 +456,26 @@ function PatientList() {
 									>
 										Prescribe Medicine & Diet - Yoga Plan
 								</button>
+								{appointment.paymentScreenshot && appointment.paymentStatus === "Pending" && (
+									<div style={{ marginTop: '10px' }}>
+										<p><strong>Payment Proof:</strong></p>
+										<img 
+											src={`${process.env.REACT_APP_AYURVEDA_BACKEND_URL || 'http://localhost:8080'}/${appointment.paymentScreenshot}`} 
+											alt="Payment Proof" 
+											style={{ maxWidth: '100%', height: 'auto', marginBottom: '10px', borderRadius: '5px' }} 
+										/>
+										<button 
+											className="action-button suggest-button" 
+											onClick={() => handleVerifyPayment(appointment._id)}
+											style={{ backgroundColor: '#28a745' }}
+										>
+											Verify Payment
+										</button>
+									</div>
+								)}
+								{appointment.paymentStatus === "Completed" && (
+									<p style={{ marginTop: '10px', color: 'green', fontWeight: 'bold' }}>✅ Payment Verified</p>
+								)}
 							</div>
 						))
 					)}

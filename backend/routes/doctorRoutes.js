@@ -17,8 +17,13 @@ const { getAllDoctors,
     bulkVerifyDoctors,
     verifyDoctor } = require("../controllers/doctorController");
 
-// Public Routes
-router.get("/", getAllDoctors); 
+// Admin/Doctor Routes
+router.get("/", auth, (req, res, next) => {
+    if (req.user.role !== 'admin' && req.user.role !== 'doctor') {
+        return res.status(403).json({ message: "Access denied. Only admins and doctors can access full doctor profiles." });
+    }
+    next();
+}, getAllDoctors);
 
 // Multer setup for file upload
 const storage = multer.memoryStorage();
@@ -270,8 +275,8 @@ router.delete("/:id", auth, async (req, res) => {
 // New route to get all doctors from both collections (Admin only)
 router.get("/allDoctors", auth, getAllDoctorsData); 
 
-// New route to get all public doctors (Safe fields only)
-router.get("/publicDoctors", auth, require("../controllers/doctorController").getPublicDoctorsData);
+// New route to get all public doctors (Safe fields only, truly public)
+router.get("/publicDoctors", require("../controllers/doctorController").getPublicDoctorsData);
 
 // New route to get doctor by ID from both collections
 router.get("/getDoctorById/:id", auth, getDoctorById);

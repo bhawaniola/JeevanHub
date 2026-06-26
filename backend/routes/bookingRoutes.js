@@ -67,6 +67,7 @@ router.get("/reviews/:doctorEmail", async (req, res) => {
 });
 
 router.post("/:id/payment", auth, bookingController.uploadPaymentScreenshot);
+router.put("/:id/verify-payment", auth, bookingController.verifyPaymentProof);
 
 // Removed duplicate GET / here
 

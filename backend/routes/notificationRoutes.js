@@ -17,32 +17,7 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// Create a new notification
-router.post('/', auth, async (req, res) => {
-  try {
-    const { orderId, type, message, isRead } = req.body;
-    
-    if (!orderId || !message) {
-      return res.status(400).json({ message: 'Order ID and message are required' });
-    }
-    
-    const newNotification = new Notification({
-      userId: req.user._id,
-      role: req.user.role || 'patient', // Provide role
-      orderId,
-      type: type || 'system',
-      message,
-      isRead: isRead || false,
-      createdAt: new Date()
-    });
-    
-    const notification = await newNotification.save();
-    res.status(201).json(notification);
-  } catch (err) {
-    console.error('Error creating notification:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+// Create a new notification route removed (C4-8) - notifications must be generated server-side.
 
 // Mark a notification as read
 router.patch('/:id/read', auth, async (req, res) => {
