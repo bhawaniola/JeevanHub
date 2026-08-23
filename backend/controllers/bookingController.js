@@ -1693,7 +1693,8 @@ exports.getDoctorPatientHistory = async (req, res) => {
 		const bookings = await Booking.find({
 			doctorId,
 			patientId,
-			requestAccept: 'accepted'
+			requestAccept: 'accepted',
+			dateOfAppointment: { $lt: new Date() }
 		}).sort({ dateOfAppointment: -1 });
 
 		return res.status(200).json({ bookings });

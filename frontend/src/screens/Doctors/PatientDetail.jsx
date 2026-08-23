@@ -33,6 +33,11 @@ function PatientDetail() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 	const [showVisits, setShowVisits] = useState(false);
+	const [expandedMedicines, setExpandedMedicines] = useState({});
+
+	const toggleMedicines = (id) => {
+		setExpandedMedicines((prev) => ({ ...prev, [id]: !prev[id] }));
+	};
 
 	useEffect(() => {
 		const fetchAll = async () => {
@@ -79,7 +84,10 @@ function PatientDetail() {
 
 	return (
 		<DashboardShell>
-			<Button variant="ghost" size="sm" className="mb-4" onClick={() => navigate("/patient-list")}>
+			<Button
+				onClick={() => navigate("/patient-list")}
+				className="mb-4 bg-[var(--jh-olive-light)] text-[var(--jh-cream)] hover:bg-[var(--jh-olive-leaf)] transition-colors flex items-center gap-2"
+			>
 				<ChevronLeft className="size-4" /> Back to Patient List
 			</Button>
 
@@ -147,19 +155,44 @@ function PatientDetail() {
 										</Badge>
 									</div>
 
-									{visit.rating ? (
-										<div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-											<Star className="size-3.5 fill-primary text-primary" /> {visit.rating}/5
-											{visit.review ? ` — "${visit.review}"` : ""}
+									{visit.recommendedSupplements?.length > 0 ? (
+										<div className="mt-2">
+											<button
+												type="button"
+												onClick={() => toggleMedicines(visit._id)}
+												className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-primary transition-colors cursor-pointer bg-transparent border-0 p-0"
+											>
+												<Pill className="size-3.5 text-muted-foreground" />
+												<span>
+													{visit.recommendedSupplements.length} medicine
+													{visit.recommendedSupplements.length > 1 ? "s" : ""} prescribed
+												</span>
+												<ChevronDown className={`size-3.5 text-muted-foreground transition-transform ${expandedMedicines[visit._id] ? "rotate-180" : ""}`} />
+											</button>
+
+											{expandedMedicines[visit._id] ? (
+												<div className="mt-2 pl-5 flex flex-col gap-1 text-xs text-muted-foreground border-l-2 border-border ml-1.5">
+													{visit.recommendedSupplements.map((med, idx) => (
+														<div key={med._id || idx} className="flex flex-wrap items-center gap-1.5">
+															<span className="font-semibold text-foreground">• {med.medicineName}</span>
+															{med.dosage ? <span className="text-muted-foreground">({med.dosage})</span> : null}
+															{med.instructions ? <span className="italic text-muted-foreground/80">— {med.instructions}</span> : null}
+														</div>
+													))}
+												</div>
+											) : null}
 										</div>
 									) : null}
 
-									{visit.recommendedSupplements?.length > 0 ? (
-										<p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-											<Pill className="size-3.5" /> {visit.recommendedSupplements.length} medicine
-											{visit.recommendedSupplements.length > 1 ? "s" : ""} prescribed
+									{visit.patientIllness ? (
+										<p className="mt-2 text-xs text-muted-foreground">
+											<strong className="text-foreground">Reason for Visit:</strong> {visit.patientIllness}
 										</p>
 									) : null}
+
+									<p className="mt-1 text-xs text-muted-foreground">
+										<strong className="text-foreground">Diagnosis:</strong> {visit.diagnosis ? visit.diagnosis : <span className="italic text-muted-foreground/75">Not given</span>}
+									</p>
 
 									<Button size="sm" variant="outline" className="mt-3" onClick={() => navigate(`/doctorsprescribe/${visit._id}`)}>
 										View / Edit Prescription
