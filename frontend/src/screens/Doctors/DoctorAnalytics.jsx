@@ -5,6 +5,8 @@ import {
 	Cell,
 	LineChart,
 	Line,
+	AreaChart,
+	Area,
 	XAxis,
 	YAxis,
 	CartesianGrid,
@@ -12,6 +14,7 @@ import {
 	Legend,
 	BarChart,
 	Bar,
+	LabelList,
 	ScatterChart,
 	Scatter,
 	ResponsiveContainer,
@@ -67,6 +70,7 @@ function DoctorAnalytics() {
 	const [error, setError] = useState(null);
 	const [activeTab, setActiveTab] = useState("payments");
 	const [filterRange, setFilterRange] = useState("all");
+	const [searchDate, setSearchDate] = useState("");
 
 	const { auth } = useContext(AuthContext);
 	const doctorId = auth.user?.id;
@@ -102,23 +106,27 @@ function DoctorAnalytics() {
 		fetchBookings();
 	}, [doctorId]);
 
+	const acceptedBookings = bookings.filter((b) => b.requestAccept === "accepted");
+	const nowTime = new Date();
+	const completedBookings = acceptedBookings.filter((b) => new Date(b.dateOfAppointment) < nowTime);
+
 	const genderData = [
-		{ name: "Male", value: bookings.filter((b) => b.patientGender === "Male").length },
-		{ name: "Female", value: bookings.filter((b) => b.patientGender === "Female").length },
-		{ name: "Other", value: bookings.filter((b) => b.patientGender === "Other").length },
+		{ name: "Male", value: completedBookings.filter((b) => b.patientGender === "Male").length },
+		{ name: "Female", value: completedBookings.filter((b) => b.patientGender === "Female").length },
+		{ name: "Other", value: completedBookings.filter((b) => b.patientGender === "Other").length },
 	].filter((d) => d.value > 0);
 
 	const ageData = [
-		{ ageGroup: "0-10", count: bookings.filter((b) => b.patientAge >= 0 && b.patientAge <= 10).length },
-		{ ageGroup: "11-20", count: bookings.filter((b) => b.patientAge >= 11 && b.patientAge <= 20).length },
-		{ ageGroup: "21-30", count: bookings.filter((b) => b.patientAge >= 21 && b.patientAge <= 30).length },
-		{ ageGroup: "31-40", count: bookings.filter((b) => b.patientAge >= 31 && b.patientAge <= 40).length },
-		{ ageGroup: "41-50", count: bookings.filter((b) => b.patientAge >= 41 && b.patientAge <= 50).length },
-		{ ageGroup: "51+", count: bookings.filter((b) => b.patientAge >= 51).length },
+		{ ageGroup: "0-10", count: completedBookings.filter((b) => b.patientAge >= 0 && b.patientAge <= 10).length },
+		{ ageGroup: "11-20", count: completedBookings.filter((b) => b.patientAge >= 11 && b.patientAge <= 20).length },
+		{ ageGroup: "21-30", count: completedBookings.filter((b) => b.patientAge >= 21 && b.patientAge <= 30).length },
+		{ ageGroup: "31-40", count: completedBookings.filter((b) => b.patientAge >= 31 && b.patientAge <= 40).length },
+		{ ageGroup: "41-50", count: completedBookings.filter((b) => b.patientAge >= 41 && b.patientAge <= 50).length },
+		{ ageGroup: "51+", count: completedBookings.filter((b) => b.patientAge >= 51).length },
 	];
 
 	const currentYear = new Date().getFullYear();
-	const currentYearBookings = bookings.filter(
+	const currentYearBookings = completedBookings.filter(
 		(booking) => new Date(booking.dateOfAppointment).getFullYear() === currentYear
 	);
 
@@ -129,42 +137,110 @@ function DoctorAnalytics() {
 		};
 	});
 
-	const ratingsByDate = bookings
-		.filter((b) => b.rating !== null && b.rating !== undefined)
-		.reduce((acc, b) => {
-			const key = new Date(b.dateOfAppointment).toISOString().split('T')[0];
-			if (!acc[key]) {
-				acc[key] = { sum: 0, count: 0, dateObj: new Date(b.dateOfAppointment) };
-			}
-			acc[key].sum += b.rating;
-			acc[key].count += 1;
-			return acc;
-		}, {});
+	const completedCount = completedBookings.length;
+	const totalAppointments = completedCount;
 
-	const averageRatingData = Object.keys(ratingsByDate)
-		.map((key) => {
-			const item = ratingsByDate[key];
-			return {
-				date: item.dateObj.toLocaleDateString("en-GB", { day: "numeric", month: "short" }),
-				averageRating: parseFloat((item.sum / item.count).toFixed(1)),
-				dateObj: item.dateObj,
-			};
-		})
-		.sort((a, b) => a.dateObj - b.dateObj);
+	const ageChartData = ageData.map((item) => {
+		const pct = completedCount > 0 ? Math.round((item.count / completedCount) * 100) : 0;
+		return {
+			...item,
+			percentage: pct,
+			labelText: `${item.count} (${pct}%)`,
+		};
+	});
+
+	const todayStr = new Date().toDateString();
+	const todayAppointments = completedBookings.filter(
+		(b) => new Date(b.dateOfAppointment).toDateString() === todayStr
+	).length;
+
+	const uniqueDays = new Set(completedBookings.map((b) => new Date(b.dateOfAppointment).toDateString())).size;
+	const avgPerDay = uniqueDays > 0 ? (completedBookings.length / uniqueDays).toFixed(1) : "0.0";
+
+	const totalRaw = bookings.length;
+	const completedPct = totalRaw > 0 ? Math.round((completedCount / totalRaw) * 100) : 0;
+
+	const cancelledCount = bookings.filter((b) => b.requestAccept === "denied").length;
+	const cancelledPct = totalRaw > 0 ? Math.round((cancelledCount / totalRaw) * 100) : 0;
+
+	const noShowCount = acceptedBookings.filter(
+		(b) => new Date(b.dateOfAppointment) < nowTime && b.paymentStatus === "Pending"
+	).length;
+	const noShowPct = totalRaw > 0 ? Math.round((noShowCount / totalRaw) * 100) : 0;
+
+	// Calculate live growth rate (last 30 days vs previous 30 days)
+	const msInDay = 24 * 60 * 60 * 1000;
+	const last30DaysCount = acceptedBookings.filter((b) => {
+		const diff = nowTime - new Date(b.dateOfAppointment);
+		return diff >= 0 && diff <= 30 * msInDay;
+	}).length;
+
+	const prev30DaysCount = acceptedBookings.filter((b) => {
+		const diff = nowTime - new Date(b.dateOfAppointment);
+		return diff > 30 * msInDay && diff <= 60 * msInDay;
+	}).length;
+
+	let growthText = "0";
+	let growthColor = "text-muted-foreground";
+
+	if (prev30DaysCount > 0) {
+		const growthPct = Math.round(((last30DaysCount - prev30DaysCount) / prev30DaysCount) * 100);
+		if (growthPct > 0) {
+			growthText = `▲ ${growthPct}%`;
+			growthColor = "text-emerald-600";
+		} else if (growthPct < 0) {
+			growthText = `▼ ${Math.abs(growthPct)}%`;
+			growthColor = "text-destructive";
+		} else {
+			growthText = "0%";
+			growthColor = "text-muted-foreground";
+		}
+	} else {
+		if (last30DaysCount > 0) {
+			growthText = `▲ +${last30DaysCount}`;
+			growthColor = "text-emerald-600";
+		} else {
+			growthText = "0";
+			growthColor = "text-muted-foreground";
+		}
+	}
+
+	const ratedBookings = completedBookings.filter(
+		(b) => b.rating !== null && b.rating !== undefined
+	);
+
+	const monthlyRatingsData = Array.from({ length: 12 }, (_, i) => {
+		const monthBookings = ratedBookings.filter(
+			(b) => new Date(b.dateOfAppointment).getFullYear() === currentYear &&
+			       new Date(b.dateOfAppointment).getMonth() === i
+		);
+		const sum = monthBookings.reduce((acc, b) => acc + b.rating, 0);
+		const count = monthBookings.length;
+		return {
+			month: new Date(currentYear, i).toLocaleString("default", { month: "short" }),
+			averageRating: count > 0 ? parseFloat((sum / count).toFixed(1)) : null,
+		};
+	});
 
 	// Helper to get the actual payment date (fallback to createdAt if paymentConfirmedAt is missing)
 	const getPaymentDate = (b) => b.paymentConfirmedAt || b.createdAt;
 
 	// Payment history: only appointments the doctor actually got paid for --
 	// accepted + a completed payment (Razorpay-verified or doctor-confirmed proof).
-	const paidBookings = bookings
-		.filter((b) => b.requestAccept === "accepted" && b.amountPaid > 0 && b.paymentStatus === "Completed")
+	const paidBookings = acceptedBookings
+		.filter((b) => b.amountPaid > 0 && b.paymentStatus === "Completed")
 		.sort((a, b) => new Date(getPaymentDate(b)) - new Date(getPaymentDate(a)));
 
 	const getFilteredPayments = () => {
 		const now = new Date();
 		return paidBookings.filter((b) => {
 			const paymentDate = new Date(getPaymentDate(b));
+
+			if (searchDate) {
+				const sDate = new Date(searchDate);
+				return paymentDate.toDateString() === sDate.toDateString();
+			}
+
 			if (filterRange === "today") {
 				return paymentDate.toDateString() === now.toDateString();
 			}
@@ -248,19 +324,49 @@ function DoctorAnalytics() {
 							<h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
 								<CreditCard className="h-5 w-5 text-primary" /> Payment History
 							</h2>
-							<div className="flex items-center gap-2">
-								<label htmlFor="payment-filter" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Filter:</label>
-								<select
-									id="payment-filter"
-									value={filterRange}
-									onChange={(e) => setFilterRange(e.target.value)}
-									className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm focus:border-primary focus:outline-none"
-								>
-									<option value="all">All Payments</option>
-									<option value="today">Today</option>
-									<option value="week">Last 7 Days</option>
-									<option value="month">Last 30 Days</option>
-								</select>
+							<div className="flex flex-wrap items-center gap-4">
+								<div className="flex items-center gap-2">
+									<label htmlFor="search-date" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Search Date:</label>
+									<input
+										id="search-date"
+										type="date"
+										value={searchDate}
+										onClick={(e) => {
+											try {
+												e.target.showPicker();
+											} catch (err) {
+												console.error(err);
+											}
+										}}
+										onChange={(e) => setSearchDate(e.target.value)}
+										className="rounded-md border border-border bg-background px-3 py-1.5 text-xs text-foreground shadow-sm focus:border-primary focus:outline-none cursor-pointer"
+									/>
+									{searchDate && (
+										<button
+											onClick={() => setSearchDate("")}
+											className="text-xs text-destructive hover:underline font-semibold"
+										>
+											Clear
+										</button>
+									)}
+								</div>
+								<div className="flex items-center gap-2">
+									<label htmlFor="payment-filter" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Filter:</label>
+									<select
+										id="payment-filter"
+										value={filterRange}
+										onChange={(e) => setFilterRange(e.target.value)}
+										className={`rounded-md border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm focus:border-primary focus:outline-none ${
+											searchDate ? "opacity-50 pointer-events-none" : ""
+										}`}
+										disabled={!!searchDate}
+									>
+										<option value="all">All Payments</option>
+										<option value="today">Today</option>
+										<option value="week">Last 7 Days</option>
+										<option value="month">Last 30 Days</option>
+									</select>
+								</div>
 							</div>
 						</div>
 						{filteredPaidBookings.length === 0 ? (
@@ -345,34 +451,12 @@ function DoctorAnalytics() {
 							<UserCheck className="h-5 w-5 text-primary" /> Patient Age Distribution
 						</h2>
 						<ResponsiveContainer width="100%" height={320}>
-							<LineChart data={ageData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+							<BarChart
+								data={ageChartData}
+								margin={{ top: 20, right: 10, left: -20, bottom: 5 }}
+							>
 								<CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} vertical={false} />
 								<XAxis dataKey="ageGroup" stroke={AXIS_COLOR} tick={{ fill: AXIS_COLOR }} tickLine={false} axisLine={false} />
-								<YAxis stroke={AXIS_COLOR} tick={{ fill: AXIS_COLOR }} tickLine={false} axisLine={false} />
-								<Tooltip contentStyle={tooltipContentStyle} />
-								<Line
-									type="monotone"
-									dataKey="count"
-									name="Patients"
-									stroke={SERIES_COLOR}
-									strokeWidth={3}
-									dot={{ r: 5, strokeWidth: 2 }}
-									activeDot={{ r: 8 }}
-								/>
-							</LineChart>
-						</ResponsiveContainer>
-					</Card>
-				)}
-
-				{activeTab === "appointments" && (
-					<Card className="p-6">
-						<h2 className="mb-5 border-b border-border pb-3 text-lg font-semibold text-foreground flex items-center gap-2">
-							<CalendarDays className="h-5 w-5 text-primary" /> Monthly Appointments ({currentYear})
-						</h2>
-						<ResponsiveContainer width="100%" height={320}>
-							<BarChart data={monthlyData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-								<CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} vertical={false} />
-								<XAxis dataKey="month" stroke={AXIS_COLOR} tick={{ fill: AXIS_COLOR }} tickLine={false} axisLine={false} />
 								<YAxis
 									stroke={AXIS_COLOR}
 									tick={{ fill: AXIS_COLOR }}
@@ -380,25 +464,96 @@ function DoctorAnalytics() {
 									axisLine={false}
 									allowDecimals={false}
 								/>
-								<Tooltip cursor={{ fill: "var(--muted)" }} contentStyle={tooltipContentStyle} />
-								<Bar dataKey="count" name="Appointments" fill={SERIES_COLOR} radius={[6, 6, 0, 0]} />
+								<Tooltip cursor={{ fill: "var(--muted)", opacity: 0.15 }} contentStyle={tooltipContentStyle} />
+								<Bar dataKey="count" fill="var(--primary)" radius={[4, 4, 0, 0]}>
+									<LabelList dataKey="labelText" position="top" style={{ fill: "var(--foreground)", fontSize: 11, fontWeight: "600" }} />
+								</Bar>
 							</BarChart>
 						</ResponsiveContainer>
+					</Card>
+				)}
+
+				{activeTab === "appointments" && (
+					<Card className="p-6">
+						<div className="flex flex-col gap-6">
+							<h2 className="border-b border-border pb-3 text-lg font-semibold text-foreground flex items-center gap-2">
+								<CalendarDays className="h-5 w-5 text-primary" /> Appointments Overview
+							</h2>
+
+							{/* Top Summary stats cards */}
+							<div className="grid grid-cols-2 gap-4">
+								<div className="rounded-lg bg-muted/50 p-4">
+									<p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Appointments (Last 30 Days)</p>
+									<div className="mt-1.5 flex items-baseline gap-2">
+										<span className="text-3xl font-bold text-foreground">{last30DaysCount}</span>
+										<span className={`text-xs font-semibold flex items-center ${growthColor}`}>
+											{growthText}
+										</span>
+									</div>
+									<p className="mt-0.5 text-[10px] text-muted-foreground">vs previous 30 days</p>
+								</div>
+								<div className="rounded-lg bg-muted/50 p-4">
+									<p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Today</p>
+									<div className="mt-1.5 flex items-baseline gap-2">
+										<span className="text-3xl font-bold text-foreground">{todayAppointments}</span>
+										<span className="text-xs text-muted-foreground ml-1">Appointments</span>
+									</div>
+									<p className="mt-0.5 text-[10px] text-muted-foreground">done today</p>
+								</div>
+							</div>
+
+							{/* The Area Chart */}
+							<ResponsiveContainer width="100%" height={260}>
+								<AreaChart data={monthlyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+									<defs>
+										<linearGradient id="appointmentGradient" x1="0" y1="0" x2="0" y2="1">
+											<stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
+											<stop offset="95%" stopColor="var(--primary)" stopOpacity={0.0} />
+										</linearGradient>
+									</defs>
+									<CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} vertical={false} />
+									<XAxis dataKey="month" stroke={AXIS_COLOR} tick={{ fill: AXIS_COLOR }} tickLine={false} axisLine={false} />
+									<YAxis
+										stroke={AXIS_COLOR}
+										tick={{ fill: AXIS_COLOR }}
+										tickLine={false}
+										axisLine={false}
+										allowDecimals={false}
+									/>
+									<Tooltip cursor={{ stroke: "var(--primary)", strokeWidth: 1 }} contentStyle={tooltipContentStyle} />
+									<Area
+										type="monotone"
+										dataKey="count"
+										name="Appointments"
+										stroke="var(--primary)"
+										strokeWidth={3}
+										fillOpacity={1}
+										fill="url(#appointmentGradient)"
+									/>
+								</AreaChart>
+							</ResponsiveContainer>
+						</div>
 					</Card>
 				)}
 
 				{activeTab === "ratings" && (
 					<Card className="p-6">
 						<h2 className="mb-5 border-b border-border pb-3 text-lg font-semibold text-foreground flex items-center gap-2">
-							<Star className="h-5 w-5 text-primary fill-primary/10" /> Patient Ratings Trend (Daily Average)
+							<Star className="h-5 w-5 text-primary fill-primary/10" /> Patient Ratings Trend (Monthly Average)
 						</h2>
-						{averageRatingData.length === 0 ? (
+						{ratedBookings.length === 0 ? (
 							<p className="py-12 text-center text-muted-foreground">No ratings received yet.</p>
 						) : (
 							<ResponsiveContainer width="100%" height={320}>
-								<LineChart data={averageRatingData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+								<AreaChart data={monthlyRatingsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+									<defs>
+										<linearGradient id="ratingGradient" x1="0" y1="0" x2="0" y2="1">
+											<stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
+											<stop offset="95%" stopColor="var(--primary)" stopOpacity={0.0} />
+										</linearGradient>
+									</defs>
 									<CartesianGrid strokeDasharray="3 3" stroke={GRID_COLOR} vertical={false} />
-									<XAxis dataKey="date" stroke={AXIS_COLOR} tick={{ fill: AXIS_COLOR }} tickLine={false} axisLine={false} />
+									<XAxis dataKey="month" stroke={AXIS_COLOR} tick={{ fill: AXIS_COLOR }} tickLine={false} axisLine={false} />
 									<YAxis
 										domain={[1, 5]}
 										ticks={[1, 2, 3, 4, 5]}
@@ -407,17 +562,18 @@ function DoctorAnalytics() {
 										tickLine={false}
 										axisLine={false}
 									/>
-									<Tooltip contentStyle={tooltipContentStyle} />
-									<Line
+									<Tooltip cursor={{ stroke: "var(--primary)", strokeWidth: 1 }} contentStyle={tooltipContentStyle} />
+									<Area
 										type="monotone"
 										dataKey="averageRating"
 										name="Average Rating"
-										stroke={SERIES_COLOR}
+										stroke="var(--primary)"
 										strokeWidth={3}
-										dot={{ r: 5, strokeWidth: 2 }}
-										activeDot={{ r: 8 }}
+										fillOpacity={1}
+										fill="url(#ratingGradient)"
+										connectNulls={true}
 									/>
-								</LineChart>
+								</AreaChart>
 							</ResponsiveContainer>
 						)}
 					</Card>
