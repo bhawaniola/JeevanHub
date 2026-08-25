@@ -321,7 +321,8 @@ function DoctorAnalytics() {
 										id="search-date"
 										type="date"
 										value={searchDate}
-										onClick={(e) => {
+										onMouseDown={(e) => {
+											e.preventDefault();
 											try {
 												e.target.showPicker();
 											} catch (err) {
@@ -346,10 +347,7 @@ function DoctorAnalytics() {
 										id="payment-filter"
 										value={filterRange}
 										onChange={(e) => setFilterRange(e.target.value)}
-										className={`rounded-md border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm focus:border-primary focus:outline-none ${
-											searchDate ? "opacity-50 pointer-events-none" : ""
-										}`}
-										disabled={!!searchDate}
+										className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm focus:border-primary focus:outline-none"
 									>
 										<option value="all">All Payments</option>
 										<option value="today">Today</option>
