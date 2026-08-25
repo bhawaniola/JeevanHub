@@ -180,29 +180,19 @@ function DoctorAnalytics() {
 		return diff > 30 * msInDay && diff <= 60 * msInDay;
 	}).length;
 
+	const absoluteDiff = last30DaysCount - prev30DaysCount;
 	let growthText = "0";
 	let growthColor = "text-muted-foreground";
 
-	if (prev30DaysCount > 0) {
-		const growthPct = Math.round(((last30DaysCount - prev30DaysCount) / prev30DaysCount) * 100);
-		if (growthPct > 0) {
-			growthText = `▲ ${growthPct}%`;
-			growthColor = "text-emerald-600";
-		} else if (growthPct < 0) {
-			growthText = `▼ ${Math.abs(growthPct)}%`;
-			growthColor = "text-destructive";
-		} else {
-			growthText = "0%";
-			growthColor = "text-muted-foreground";
-		}
+	if (absoluteDiff > 0) {
+		growthText = `▲ +${absoluteDiff}`;
+		growthColor = "text-emerald-600";
+	} else if (absoluteDiff < 0) {
+		growthText = `▼ ${absoluteDiff}`;
+		growthColor = "text-destructive";
 	} else {
-		if (last30DaysCount > 0) {
-			growthText = `▲ +${last30DaysCount}`;
-			growthColor = "text-emerald-600";
-		} else {
-			growthText = "0";
-			growthColor = "text-muted-foreground";
-		}
+		growthText = "0";
+		growthColor = "text-muted-foreground";
 	}
 
 	const ratedBookings = completedBookings.filter(
