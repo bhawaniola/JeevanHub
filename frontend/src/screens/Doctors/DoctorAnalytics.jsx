@@ -180,29 +180,19 @@ function DoctorAnalytics() {
 		return diff > 30 * msInDay && diff <= 60 * msInDay;
 	}).length;
 
+	const absoluteDiff = last30DaysCount - prev30DaysCount;
 	let growthText = "0";
 	let growthColor = "text-muted-foreground";
 
-	if (prev30DaysCount > 0) {
-		const growthPct = Math.round(((last30DaysCount - prev30DaysCount) / prev30DaysCount) * 100);
-		if (growthPct > 0) {
-			growthText = `▲ ${growthPct}%`;
-			growthColor = "text-emerald-600";
-		} else if (growthPct < 0) {
-			growthText = `▼ ${Math.abs(growthPct)}%`;
-			growthColor = "text-destructive";
-		} else {
-			growthText = "0%";
-			growthColor = "text-muted-foreground";
-		}
+	if (absoluteDiff > 0) {
+		growthText = `▲ +${absoluteDiff}`;
+		growthColor = "text-emerald-600";
+	} else if (absoluteDiff < 0) {
+		growthText = `▼ ${absoluteDiff}`;
+		growthColor = "text-destructive";
 	} else {
-		if (last30DaysCount > 0) {
-			growthText = `▲ +${last30DaysCount}`;
-			growthColor = "text-emerald-600";
-		} else {
-			growthText = "0";
-			growthColor = "text-muted-foreground";
-		}
+		growthText = "0";
+		growthColor = "text-muted-foreground";
 	}
 
 	const ratedBookings = completedBookings.filter(
@@ -331,7 +321,8 @@ function DoctorAnalytics() {
 										id="search-date"
 										type="date"
 										value={searchDate}
-										onClick={(e) => {
+										onMouseDown={(e) => {
+											e.preventDefault();
 											try {
 												e.target.showPicker();
 											} catch (err) {
@@ -356,10 +347,7 @@ function DoctorAnalytics() {
 										id="payment-filter"
 										value={filterRange}
 										onChange={(e) => setFilterRange(e.target.value)}
-										className={`rounded-md border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm focus:border-primary focus:outline-none ${
-											searchDate ? "opacity-50 pointer-events-none" : ""
-										}`}
-										disabled={!!searchDate}
+										className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm focus:border-primary focus:outline-none"
 									>
 										<option value="all">All Payments</option>
 										<option value="today">Today</option>
