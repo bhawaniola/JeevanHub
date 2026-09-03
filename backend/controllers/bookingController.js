@@ -140,6 +140,19 @@ exports.updateRatingAndReview = async (req, res) => {
 			return res.status(404).json({ error: "Booking not found" });
 		}
 
+		try {
+			const stars = rating ? `${rating} ★` : '';
+			await notificationController.createNotification(
+				booking.doctorId,
+				'doctor',
+				booking._id.toString(),
+				`New ${stars} review submitted by ${booking.patientName || 'a patient'}: "${review || ''}"`,
+				'review'
+			);
+		} catch (e) {
+			console.error("Failed to create review notification for doctor:", e.message);
+		}
+
 		return res.status(200).json({
 			message: "Rating and review updated successfully",
 			booking: updatedBooking,
@@ -356,6 +369,18 @@ exports.createBooking = async (req, res) => {
 
 		// Notify doctor of new pending booking
 		notifyDoctor(doctor._id);
+		try {
+			const dateStr = new Date(newBooking.dateOfAppointment).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+			await notificationController.createNotification(
+				doctor._id,
+				'doctor',
+				newBooking._id.toString(),
+				`New appointment booked by ${newBooking.patientName || 'a patient'} for ${dateStr}.`,
+				'appointment'
+			);
+		} catch (e) {
+			console.error("Failed to create doctor booking notification:", e.message);
+		}
 
 		return res.status(201).json({
 			message: "Appointment booked successfully",
@@ -490,6 +515,18 @@ exports.uploadPaymentScreenshot = (req, res) => {
 
 			// Notify doctor of new screenshot upload
 			notifyDoctor(booking.doctorId);
+			try {
+				const dateStr = new Date(booking.dateOfAppointment).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+				await notificationController.createNotification(
+					booking.doctorId,
+					'doctor',
+					booking._id.toString(),
+					`Payment screenshot uploaded by ${booking.patientName || 'patient'} for appointment on ${dateStr}.`,
+					'appointment'
+				);
+			} catch (e) {
+				console.error("Failed to create doctor screenshot notification:", e.message);
+			}
 
 			return res.status(200).json({
 				message: "Payment screenshot uploaded and booking updated",
@@ -560,6 +597,18 @@ exports.verifyBookingPayment = async (req, res) => {
 		await booking.save();
 
 		notifyDoctor(booking.doctorId);
+		try {
+			const dateStr = new Date(booking.dateOfAppointment).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+			await notificationController.createNotification(
+				booking.doctorId,
+				'doctor',
+				booking._id.toString(),
+				`Payment confirmed for appointment with ${booking.patientName || 'a patient'} on ${dateStr}.`,
+				'appointment'
+			);
+		} catch (e) {
+			console.error("Failed to create doctor payment notification:", e.message);
+		}
 
 		return res.status(200).json({
 			message: "Payment verified successfully",
@@ -992,6 +1041,18 @@ exports.raiseBookingDispute = async (req, res) => {
 		booking.dispute = { reason: reason.trim(), raisedAt: new Date() };
 		await booking.save();
 
+		try {
+			await notificationController.createNotification(
+				booking.doctorId,
+				'doctor',
+				booking._id.toString(),
+				`A dispute was raised for the appointment with ${booking.patientName || 'patient'}. Reason: "${reason.trim()}".`,
+				'dispute'
+			);
+		} catch (e) {
+			console.error("Failed to create doctor dispute notification:", e.message);
+		}
+
 		return res.status(200).json({ message: "Dispute raised. Our team will review this before any payout goes out.", booking });
 	} catch (error) {
 		console.error("Error raising booking dispute:", error);
@@ -1072,6 +1133,18 @@ exports.deleteBooking = async (req, res) => {
 		}
 		
 		notifyDoctor(deletedBooking.doctorId);
+		try {
+			const dateStr = new Date(deletedBooking.dateOfAppointment).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+			await notificationController.createNotification(
+				deletedBooking.doctorId,
+				'doctor',
+				deletedBooking._id.toString(),
+				`Appointment on ${dateStr} has been cancelled by ${deletedBooking.patientName || 'the patient'}.`,
+				'appointment'
+			);
+		} catch (e) {
+			console.error("Failed to create doctor cancellation notification:", e.message);
+		}
 
 		return res.status(200).json({ message: "Booking deleted successfully" });
 	} catch (error) {
