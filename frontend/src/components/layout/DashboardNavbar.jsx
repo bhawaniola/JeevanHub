@@ -10,6 +10,8 @@ import LocationPicker from "@/components/layout/LocationPicker";
 import { exploreOptions as defaultExploreOptions } from "@/screens/publicNavigation";
 import { AuthContext } from "@/context/AuthContext";
 import { CartContext } from "@/context/CartContext";
+import { BACKEND_URL } from "@/config";
+import { authFetch } from "@/utils/authFetch";
 import defaultProfilePic from "@/media/default-profile.png";
 import logo from "@/media/logo2.png";
 
@@ -42,10 +44,49 @@ function NavigationLink({ item, onNavigate }) {
 // data fetching (SSE badge counts, path-aware sublinks) and pass the result in.
 function DashboardNavbar({ navItems, profileTo, notificationsTo, cartTo, logoTo = "/", exploreOptions = defaultExploreOptions }) {
 	const [showMenu, setShowMenu] = useState(false);
+	const [unreadCount, setUnreadCount] = useState(0);
 	const { auth, logout } = useContext(AuthContext);
 	const { cartCount } = useContext(CartContext);
 	const savedLocation = auth.user?.address || auth.user?.zipCode;
 	const navigate = useNavigate();
+
+	useEffect(() => {
+		if (!auth?.token || !notificationsTo) {
+			setUnreadCount(0);
+			return;
+		}
+
+		let isMounted = true;
+		const fetchUnreadCount = async () => {
+			try {
+				const res = await authFetch(`${BACKEND_URL}/api/notifications`);
+				if (res.ok) {
+					const data = await res.json();
+					if (isMounted && Array.isArray(data)) {
+						const unread = data.filter((n) => !n.isRead).length;
+						setUnreadCount(unread);
+					}
+				}
+			} catch {
+				// silent error
+			}
+		};
+
+		fetchUnreadCount();
+
+		const interval = setInterval(fetchUnreadCount, 30000);
+		const handleRefresh = () => fetchUnreadCount();
+
+		window.addEventListener("notifications:updated", handleRefresh);
+		window.addEventListener("focus", handleRefresh);
+
+		return () => {
+			isMounted = false;
+			clearInterval(interval);
+			window.removeEventListener("notifications:updated", handleRefresh);
+			window.removeEventListener("focus", handleRefresh);
+		};
+	}, [auth?.token, notificationsTo]);
 
 	const userName = auth.user ? `${auth.user.firstName || ""} ${auth.user.lastName || ""}`.trim() : "Guest";
 	const profileImage = auth.user?.profileImage || defaultProfilePic;
@@ -81,9 +122,16 @@ function DashboardNavbar({ navItems, profileTo, notificationsTo, cartTo, logoTo 
 						</NavLink>
 					) : null}
 
-					<NavLink to={notificationsTo} aria-label="Notifications" className="hidden rounded-md p-2 text-primary-foreground/80 transition-colors hover:bg-primary-foreground/10 hover:text-primary-foreground sm:inline-flex">
-						<Bell className="size-5" aria-hidden="true" />
-					</NavLink>
+					{notificationsTo ? (
+						<NavLink to={notificationsTo} aria-label="Notifications" className="relative hidden rounded-md p-2 text-primary-foreground/80 transition-colors hover:bg-primary-foreground/10 hover:text-primary-foreground sm:inline-flex">
+							<Bell className="size-5" aria-hidden="true" />
+							{unreadCount > 0 && (
+								<span className="absolute -top-1 -right-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-extrabold text-white shadow-sm select-none">
+									{unreadCount > 99 ? "99+" : unreadCount}
+								</span>
+							)}
+						</NavLink>
+					) : null}
 
 					<button
 						type="button"
@@ -142,9 +190,16 @@ function DashboardNavbar({ navItems, profileTo, notificationsTo, cartTo, logoTo 
 									)}
 								</NavLink>
 							) : null}
-							<NavLink to={notificationsTo} aria-label="Notifications" onClick={() => setShowMenu(false)} className="rounded-md p-2 text-primary-foreground/80 hover:bg-primary-foreground/10">
-								<Bell className="size-5" aria-hidden="true" />
-							</NavLink>
+							{notificationsTo ? (
+								<NavLink to={notificationsTo} aria-label="Notifications" onClick={() => setShowMenu(false)} className="relative rounded-md p-2 text-primary-foreground/80 hover:bg-primary-foreground/10">
+									<Bell className="size-5" aria-hidden="true" />
+									{unreadCount > 0 && (
+										<span className="absolute -top-1 -right-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-extrabold text-white shadow-sm select-none">
+											{unreadCount > 99 ? "99+" : unreadCount}
+										</span>
+									)}
+								</NavLink>
+							) : null}
 							<Button variant="ghost" size="icon" aria-label="Sign out" onClick={handleSignOut} className="text-primary-foreground hover:bg-primary-foreground/10">
 								<LogOut className="size-4" />
 							</Button>

@@ -147,6 +147,7 @@ const DoctorNotification = () => {
 
 		// Optimistic UI update
 		setNotifications((prev) => prev.filter((n) => n._id !== id));
+		window.dispatchEvent(new Event("notifications:updated"));
 
 		try {
 			const response = await authFetch(`${BACKEND_URL}/api/notifications/${id}/read`, {
@@ -174,6 +175,7 @@ const DoctorNotification = () => {
 		setMarkingAll(true);
 		// Optimistic UI update
 		setNotifications([]);
+		window.dispatchEvent(new Event("notifications:updated"));
 
 		try {
 			const response = await authFetch(`${BACKEND_URL}/api/notifications/read-all`, {

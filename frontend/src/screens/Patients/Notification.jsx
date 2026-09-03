@@ -160,6 +160,7 @@ const Notification = () => {
 
 		// Optimistically remove from state immediately for instant UI feedback
 		setNotifications((prev) => prev.filter((n) => n._id !== id));
+		window.dispatchEvent(new Event("notifications:updated"));
 
 		try {
 			const response = await authFetch(`${BACKEND_URL}/api/notifications/${id}/read`, {
@@ -187,6 +188,7 @@ const Notification = () => {
 		setMarkingAll(true);
 		// Optimistically clear all notifications immediately
 		setNotifications([]);
+		window.dispatchEvent(new Event("notifications:updated"));
 
 		try {
 			const response = await authFetch(`${BACKEND_URL}/api/notifications/read-all`, {
