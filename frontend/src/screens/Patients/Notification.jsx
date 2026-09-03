@@ -187,21 +187,21 @@ const Notification = () => {
 			return;
 		}
 
-		if (notification.type === "diet" || notification.type === "yoga" || notification.type === "system") {
+		if (notification.type === "order" || notification.type === "payment") {
 			markAsRead(notification._id);
-			navigate("/diet-yoga");
+			navigate("/order-history");
 			return;
 		}
 
-		if (notification.type === "order") {
+		if (notification.type === "diet" || notification.type === "yoga" || notification.type === "system") {
 			markAsRead(notification._id);
-			navigate("/my-orders");
+			navigate("/prescription-wellness");
 			return;
 		}
 
 		if (notification.type === "appointment") {
 			markAsRead(notification._id);
-			navigate("/appointments");
+			navigate("/appointed-doctor");
 			return;
 		}
 	};
