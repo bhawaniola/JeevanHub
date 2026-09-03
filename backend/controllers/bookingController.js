@@ -600,6 +600,7 @@ exports.verifyBookingPayment = async (req, res) => {
 		notifyDoctor(booking.doctorId);
 		try {
 			const dateStr = new Date(booking.dateOfAppointment).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+			// 1. Notify Doctor
 			await notificationController.createNotification(
 				booking.doctorId,
 				'doctor',
@@ -607,8 +608,21 @@ exports.verifyBookingPayment = async (req, res) => {
 				`Payment confirmed for consultation with ${booking.patientName || 'a patient'} scheduled for ${dateStr}.`,
 				'appointment'
 			);
+
+			// 2. Notify Patient
+			const doctorDisplay = booking.doctorName && (booking.doctorName.toLowerCase().startsWith('dr.') || booking.doctorName.toLowerCase().startsWith('dr '))
+				? booking.doctorName
+				: `Dr. ${booking.doctorName || "your doctor"}`;
+
+			await notificationController.createNotification(
+				booking.patientId,
+				'patient',
+				booking._id.toString(),
+				`Payment of ₹${booking.amountPaid} confirmed for your consultation with ${doctorDisplay} scheduled for ${dateStr}.`,
+				'payment'
+			);
 		} catch (e) {
-			console.error("Failed to create doctor payment notification:", e.message);
+			console.error("Failed to create payment notifications:", e.message);
 		}
 
 		return res.status(200).json({
