@@ -1338,14 +1338,35 @@ exports.notifyPrescription = async (req, res) => {
 			console.error("Error publishing legacy yoga draft:", e);
 		}
 
-		await new Notification({
+		const doctorDisplayName = (booking.doctorName && (booking.doctorName.toLowerCase().startsWith('dr.') || booking.doctorName.toLowerCase().startsWith('dr ')))
+			? booking.doctorName
+			: `Dr. ${booking.doctorName || "Your Doctor"}`;
+
+		const notifyMsg = `${doctorDisplayName} has updated your prescription and treatment plan. Tap to view.`;
+
+		// Debounce: If an unread notification for this booking already exists, update it rather than creating a duplicate
+		const existingRecent = await Notification.findOne({
 			userId: booking.patientId,
 			role: 'patient',
 			orderId: id,
 			type: 'system',
-			message: `Dr. ${booking.doctorName || "Your Doctor"} has updated your prescription and treatment plan. Tap to view.`,
 			isRead: false
-		}).save();
+		});
+
+		if (existingRecent) {
+			existingRecent.message = notifyMsg;
+			existingRecent.createdAt = new Date();
+			await existingRecent.save();
+		} else {
+			await new Notification({
+				userId: booking.patientId,
+				role: 'patient',
+				orderId: id,
+				type: 'system',
+				message: notifyMsg,
+				isRead: false
+			}).save();
+		}
 
 		return res.status(200).json({ message: "Prescription submitted and patient notified." });
 	} catch (error) {
