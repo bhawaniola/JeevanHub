@@ -211,24 +211,20 @@ const Notification = () => {
 		const meetUrl = extractUrl(notification.message);
 		if (meetUrl) {
 			window.open(meetUrl, "_blank", "noopener,noreferrer");
-			markAsRead(notification._id);
 			return;
 		}
 
 		if (notification.type === "order" || notification.type === "payment") {
-			markAsRead(notification._id);
 			navigate("/order-history");
 			return;
 		}
 
 		if (notification.type === "diet" || notification.type === "yoga" || notification.type === "system") {
-			markAsRead(notification._id);
 			navigate("/prescription-wellness");
 			return;
 		}
 
 		if (notification.type === "appointment") {
-			markAsRead(notification._id);
 			navigate("/appointed-doctor");
 			return;
 		}

@@ -198,31 +198,26 @@ const DoctorNotification = () => {
 		const meetUrl = extractUrl(notification.message);
 		if (meetUrl) {
 			window.open(meetUrl, "_blank", "noopener,noreferrer");
-			markAsRead(notification._id);
 			return;
 		}
 
 		const msgLower = (notification.message || "").toLowerCase();
 
 		if (notification.type === "review" || msgLower.includes("review") || msgLower.includes("rating")) {
-			markAsRead(notification._id);
 			navigate("/doctor-reviews");
 			return;
 		}
 
 		if (notification.type === "dispute" || msgLower.includes("dispute") || msgLower.includes("refund")) {
-			markAsRead(notification._id);
 			navigate("/appointment-history");
 			return;
 		}
 
 		if (notification.type === "appointment" || msgLower.includes("appointment") || msgLower.includes("booking")) {
-			markAsRead(notification._id);
-			navigate("/appointment-history");
+			navigate("/appointment-slots");
 			return;
 		}
 
-		markAsRead(notification._id);
 		navigate("/doctor-home");
 	};
 
