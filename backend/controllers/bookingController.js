@@ -371,11 +371,12 @@ exports.createBooking = async (req, res) => {
 		notifyDoctor(doctor._id);
 		try {
 			const dateStr = new Date(newBooking.dateOfAppointment).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+			const timeStr = foundSlot?.startTime ? ` at ${foundSlot.startTime}` : '';
 			await notificationController.createNotification(
 				doctor._id,
 				'doctor',
 				newBooking._id.toString(),
-				`New appointment booked by ${newBooking.patientName || 'a patient'} for ${dateStr}.`,
+				`New appointment booked by ${newBooking.patientName || 'a patient'} scheduled for ${dateStr}${timeStr}.`,
 				'appointment'
 			);
 		} catch (e) {
@@ -521,7 +522,7 @@ exports.uploadPaymentScreenshot = (req, res) => {
 					booking.doctorId,
 					'doctor',
 					booking._id.toString(),
-					`Payment screenshot uploaded by ${booking.patientName || 'patient'} for appointment on ${dateStr}.`,
+					`Payment screenshot uploaded by ${booking.patientName || 'patient'} for consultation scheduled for ${dateStr}.`,
 					'appointment'
 				);
 			} catch (e) {
@@ -603,7 +604,7 @@ exports.verifyBookingPayment = async (req, res) => {
 				booking.doctorId,
 				'doctor',
 				booking._id.toString(),
-				`Payment confirmed for appointment with ${booking.patientName || 'a patient'} on ${dateStr}.`,
+				`Payment confirmed for consultation with ${booking.patientName || 'a patient'} scheduled for ${dateStr}.`,
 				'appointment'
 			);
 		} catch (e) {
@@ -1139,7 +1140,7 @@ exports.deleteBooking = async (req, res) => {
 				deletedBooking.doctorId,
 				'doctor',
 				deletedBooking._id.toString(),
-				`Appointment on ${dateStr} has been cancelled by ${deletedBooking.patientName || 'the patient'}.`,
+				`Consultation scheduled for ${dateStr} has been cancelled by ${deletedBooking.patientName || 'the patient'}.`,
 				'appointment'
 			);
 		} catch (e) {
