@@ -216,7 +216,7 @@ const Notification = () => {
 			return;
 		}
 
-		if (notification.type === "order" || notification.type === "payment") {
+		if (notification.type === "order" || notification.type === "payment" || notification.type === "delivery") {
 			navigate("/order-history");
 			return;
 		}
@@ -236,7 +236,7 @@ const Notification = () => {
 		if (activeTab === "all") return notifications;
 		if (activeTab === "appointments") return notifications.filter((n) => n.type === "appointment");
 		if (activeTab === "diet-yoga") return notifications.filter((n) => n.type === "diet" || n.type === "yoga");
-		if (activeTab === "orders") return notifications.filter((n) => n.type === "order" || n.type === "payment");
+		if (activeTab === "orders") return notifications.filter((n) => n.type === "order" || n.type === "payment" || n.type === "delivery");
 		if (activeTab === "system") return notifications.filter((n) => n.type === "system");
 		return notifications;
 	}, [notifications, activeTab]);
@@ -246,7 +246,7 @@ const Notification = () => {
 			all: notifications.length,
 			appointments: notifications.filter((n) => n.type === "appointment").length,
 			dietYoga: notifications.filter((n) => n.type === "diet" || n.type === "yoga").length,
-			orders: notifications.filter((n) => n.type === "order" || n.type === "payment").length,
+			orders: notifications.filter((n) => n.type === "order" || n.type === "payment" || n.type === "delivery").length,
 			system: notifications.filter((n) => n.type === "system").length,
 		};
 	}, [notifications]);
