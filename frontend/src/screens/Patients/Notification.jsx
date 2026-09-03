@@ -26,44 +26,51 @@ const TYPE_CONFIG = {
 	appointment: {
 		label: "Appointment",
 		icon: Calendar,
-		iconColor: "text-blue-600 dark:text-blue-400",
-		badgeClass: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300",
+		iconColor: "text-blue-700 dark:text-blue-400",
+		borderAccent: "border-l-4 border-l-blue-600",
+		badgeClass: "bg-blue-100/80 text-blue-900 border-blue-300 font-bold",
 	},
 	diet: {
 		label: "Diet Plan",
 		icon: Utensils,
-		iconColor: "text-[var(--jh-olive-primary)]",
-		badgeClass: "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300",
+		iconColor: "text-[var(--jh-olive-action)]",
+		borderAccent: "border-l-4 border-l-[var(--jh-olive-leaf)]",
+		badgeClass: "bg-emerald-100/80 text-emerald-900 border-emerald-300 font-bold",
 	},
 	yoga: {
 		label: "Yoga Routine",
 		icon: Sparkles,
-		iconColor: "text-[var(--jh-saffron-warm)]",
-		badgeClass: "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300",
+		iconColor: "text-amber-700 dark:text-amber-400",
+		borderAccent: "border-l-4 border-l-amber-600",
+		badgeClass: "bg-amber-100/80 text-amber-900 border-amber-300 font-bold",
 	},
 	order: {
 		label: "Order",
 		icon: Package,
-		iconColor: "text-[var(--jh-turmeric-gold)]",
-		badgeClass: "bg-orange-50 text-orange-800 border-orange-200 dark:bg-orange-950/40 dark:text-orange-300",
+		iconColor: "text-amber-800 dark:text-amber-300",
+		borderAccent: "border-l-4 border-l-[var(--jh-turmeric-gold)]",
+		badgeClass: "bg-amber-100/80 text-amber-900 border-amber-300 font-bold",
 	},
 	payment: {
 		label: "Payment",
 		icon: AlertCircle,
-		iconColor: "text-emerald-600 dark:text-emerald-400",
-		badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300",
+		iconColor: "text-emerald-700 dark:text-emerald-400",
+		borderAccent: "border-l-4 border-l-emerald-600",
+		badgeClass: "bg-emerald-100/80 text-emerald-900 border-emerald-300 font-bold",
 	},
 	system: {
-		label: "Prescription / System",
+		label: "Prescription",
 		icon: FileText,
-		iconColor: "text-muted-foreground",
-		badgeClass: "bg-muted text-muted-foreground border-border",
+		iconColor: "text-[var(--jh-olive-deep)]",
+		borderAccent: "border-l-4 border-l-[var(--jh-olive-leaf)]",
+		badgeClass: "bg-[var(--jh-sage-pale)] text-[var(--jh-olive-deep)] border-[var(--jh-line-strong)] font-bold",
 	},
 	default: {
 		label: "Notification",
 		icon: Bell,
-		iconColor: "text-muted-foreground",
-		badgeClass: "bg-muted text-muted-foreground border-border",
+		iconColor: "text-[var(--jh-ink)]",
+		borderAccent: "border-l-4 border-l-[var(--jh-olive-leaf)]",
+		badgeClass: "bg-muted text-foreground border-border font-bold",
 	},
 };
 
@@ -350,24 +357,24 @@ const Notification = () => {
 								return (
 									<li
 										key={notification._id}
-										className="group relative flex flex-col justify-between gap-3 rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:border-[var(--jh-olive-primary)]/40 hover:shadow-md sm:flex-row sm:items-start"
+										className={`group relative flex flex-col justify-between gap-3.5 rounded-xl border border-[var(--jh-line-strong)] bg-white dark:bg-card p-4.5 shadow-[0_4px_16px_rgba(47,53,36,0.08)] transition-all hover:shadow-[0_8px_24px_rgba(47,53,36,0.12)] hover:border-[var(--jh-olive-action)] ${config.borderAccent} sm:flex-row sm:items-start`}
 									>
 										<div className="flex flex-1 items-start gap-3.5 min-w-0">
-											<div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+											<div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-[var(--jh-sage-pale)] border border-[var(--jh-line)]">
 												<Icon className={`size-5 ${config.iconColor}`} aria-hidden="true" />
 											</div>
 
 											<div className="min-w-0 flex-1">
 												<div className="flex flex-wrap items-center gap-2">
-													<span className={`rounded px-2 py-0.5 text-[11px] font-semibold border ${config.badgeClass}`}>
+													<span className={`rounded-md px-2 py-0.5 text-[11px] font-bold border ${config.badgeClass}`}>
 														{config.label}
 													</span>
-													<span className="text-xs text-muted-foreground">
+													<span className="text-xs font-semibold text-[var(--jh-muted)]">
 														{formatNotificationTime(notification.createdAt)}
 													</span>
 												</div>
 
-												<p className="mt-1.5 text-sm text-foreground/90 leading-relaxed break-words">
+												<p className="mt-2 text-sm font-medium text-[var(--jh-ink)] leading-relaxed break-words">
 													{cleanMessage}
 												</p>
 
@@ -379,11 +386,11 @@ const Notification = () => {
 															target="_blank"
 															rel="noopener noreferrer"
 															onClick={() => markAsRead(notification._id)}
-															className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--jh-olive-primary)] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[var(--jh-olive-leaf)]"
+															className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--jh-olive-action)] px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[var(--jh-olive-hover)]"
 														>
 															<Video className="size-3.5" />
 															Join Video Call
-															<ExternalLink className="size-3 opacity-70" />
+															<ExternalLink className="size-3 opacity-80" />
 														</a>
 													) : null}
 
@@ -391,7 +398,7 @@ const Notification = () => {
 														<button
 															type="button"
 															onClick={() => handleAction(notification)}
-															className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted hover:border-[var(--jh-olive-primary)]"
+															className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--jh-line-strong)] bg-[var(--jh-cream)] px-3 py-1.5 text-xs font-semibold text-[var(--jh-olive-deep)] shadow-xs transition-colors hover:bg-[var(--jh-sage-pale)] hover:border-[var(--jh-olive-action)]"
 														>
 															View Wellness Plan
 														</button>
@@ -401,7 +408,7 @@ const Notification = () => {
 														<button
 															type="button"
 															onClick={() => handleAction(notification)}
-															className="inline-flex items-center gap-1 rounded-lg border border-border bg-muted/50 px-2.5 py-1 text-xs font-medium text-foreground hover:bg-muted hover:border-[var(--jh-olive-primary)]"
+															className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--jh-line-strong)] bg-[var(--jh-cream)] px-3 py-1.5 text-xs font-semibold text-[var(--jh-olive-deep)] shadow-xs transition-colors hover:bg-[var(--jh-sage-pale)] hover:border-[var(--jh-olive-action)]"
 														>
 															View Orders
 														</button>
@@ -416,7 +423,7 @@ const Notification = () => {
 											onClick={(e) => markAsRead(notification._id, e)}
 											title="Mark as read"
 											aria-label="Mark as read"
-											className="self-end sm:self-start shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+											className="self-end sm:self-start shrink-0 rounded-full p-2 text-[var(--jh-muted)] hover:bg-[var(--jh-sage-pale)] hover:text-[var(--jh-olive-action)] border border-transparent hover:border-[var(--jh-line-strong)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 										>
 											<Check className="size-4" />
 										</button>
