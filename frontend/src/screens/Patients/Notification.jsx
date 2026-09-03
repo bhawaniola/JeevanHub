@@ -153,31 +153,52 @@ const Notification = () => {
 	}, [auth, patientId]);
 
 	const markAsRead = async (id, e) => {
-		if (e) e.stopPropagation();
+		if (e) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
+
+		// Optimistically remove from state immediately for instant UI feedback
+		setNotifications((prev) => prev.filter((n) => n._id !== id));
+
 		try {
 			const response = await authFetch(`${BACKEND_URL}/api/notifications/${id}/read`, {
 				method: "PATCH",
 				headers: { "Content-Type": "application/json" },
 			});
 
-			if (response.ok) {
-				setNotifications((prev) => prev.filter((n) => n._id !== id));
+			if (!response.ok) {
+				await authFetch(`${BACKEND_URL}/api/notifications/${id}/read`, {
+					method: "PUT",
+					headers: { "Content-Type": "application/json" },
+				});
 			}
 		} catch (err) {
 			console.error("Error marking notification as read:", err);
 		}
 	};
 
-	const markAllAsRead = async () => {
+	const markAllAsRead = async (e) => {
+		if (e) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
+
 		setMarkingAll(true);
+		// Optimistically clear all notifications immediately
+		setNotifications([]);
+
 		try {
 			const response = await authFetch(`${BACKEND_URL}/api/notifications/read-all`, {
 				method: "PATCH",
 				headers: { "Content-Type": "application/json" },
 			});
 
-			if (response.ok) {
-				setNotifications([]);
+			if (!response.ok) {
+				await authFetch(`${BACKEND_URL}/api/notifications/read-all`, {
+					method: "PUT",
+					headers: { "Content-Type": "application/json" },
+				});
 			}
 		} catch (err) {
 			console.error("Error marking all notifications as read:", err);
@@ -241,7 +262,7 @@ const Notification = () => {
 						<div className="flex items-center gap-2.5">
 							<h1 className="font-display text-2xl font-bold text-foreground sm:text-3xl">Your Notifications</h1>
 							{notifications.length > 0 && (
-								<Badge className="bg-[var(--jh-olive-primary)] text-white hover:bg-[var(--jh-olive-leaf)]">
+								<Badge className="bg-[#4a5c28] text-white hover:bg-[#3a4a1f] font-semibold">
 									{notifications.length} new
 								</Badge>
 							)}
@@ -257,23 +278,23 @@ const Notification = () => {
 							size="sm"
 							onClick={markAllAsRead}
 							disabled={markingAll}
-							className="flex items-center gap-1.5 self-start border-border text-foreground hover:bg-muted sm:self-auto"
+							className="flex items-center gap-1.5 self-start border-[var(--jh-line-strong)] bg-white text-foreground hover:bg-[var(--jh-sage-pale)] hover:text-[#4a5c28] font-semibold sm:self-auto cursor-pointer shadow-xs"
 						>
-							<CheckCheck className="size-4 text-[var(--jh-olive-primary)]" />
+							<CheckCheck className="size-4 text-[#4a5c28]" />
 							{markingAll ? "Marking..." : "Mark all as read"}
 						</Button>
 					)}
 				</div>
 
-				{/* Filter Tabs */}
-				<div className="mt-6 flex flex-wrap gap-1.5 border-b border-border pb-3">
+				{/* Filter Tabs (High-Contrast Active Pill) */}
+				<div className="mt-6 flex flex-wrap gap-2 border-b border-[var(--jh-line)] pb-3">
 					<button
 						type="button"
 						onClick={() => setActiveTab("all")}
-						className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+						className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
 							activeTab === "all"
-								? "bg-[var(--jh-olive-primary)] text-white shadow-sm"
-								: "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground"
+								? "bg-[#4a5c28] text-white shadow-sm ring-2 ring-[#4a5c28]/20"
+								: "border border-[var(--jh-line-strong)] bg-white text-[var(--jh-ink)] hover:bg-[var(--jh-sage-pale)] hover:border-[#4a5c28]"
 						}`}
 					>
 						All ({counts.all})
@@ -282,10 +303,10 @@ const Notification = () => {
 					<button
 						type="button"
 						onClick={() => setActiveTab("appointments")}
-						className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+						className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
 							activeTab === "appointments"
-								? "bg-[var(--jh-olive-primary)] text-white shadow-sm"
-								: "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground"
+								? "bg-[#4a5c28] text-white shadow-sm ring-2 ring-[#4a5c28]/20"
+								: "border border-[var(--jh-line-strong)] bg-white text-[var(--jh-ink)] hover:bg-[var(--jh-sage-pale)] hover:border-[#4a5c28]"
 						}`}
 					>
 						Appointments ({counts.appointments})
@@ -294,10 +315,10 @@ const Notification = () => {
 					<button
 						type="button"
 						onClick={() => setActiveTab("diet-yoga")}
-						className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+						className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
 							activeTab === "diet-yoga"
-								? "bg-[var(--jh-olive-primary)] text-white shadow-sm"
-								: "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground"
+								? "bg-[#4a5c28] text-white shadow-sm ring-2 ring-[#4a5c28]/20"
+								: "border border-[var(--jh-line-strong)] bg-white text-[var(--jh-ink)] hover:bg-[var(--jh-sage-pale)] hover:border-[#4a5c28]"
 						}`}
 					>
 						Diet & Yoga ({counts.dietYoga})
@@ -306,10 +327,10 @@ const Notification = () => {
 					<button
 						type="button"
 						onClick={() => setActiveTab("orders")}
-						className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+						className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
 							activeTab === "orders"
-								? "bg-[var(--jh-olive-primary)] text-white shadow-sm"
-								: "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground"
+								? "bg-[#4a5c28] text-white shadow-sm ring-2 ring-[#4a5c28]/20"
+								: "border border-[var(--jh-line-strong)] bg-white text-[var(--jh-ink)] hover:bg-[var(--jh-sage-pale)] hover:border-[#4a5c28]"
 						}`}
 					>
 						Orders ({counts.orders})
@@ -318,10 +339,10 @@ const Notification = () => {
 					<button
 						type="button"
 						onClick={() => setActiveTab("system")}
-						className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+						className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
 							activeTab === "system"
-								? "bg-[var(--jh-olive-primary)] text-white shadow-sm"
-								: "bg-muted/70 text-muted-foreground hover:bg-muted hover:text-foreground"
+								? "bg-[#4a5c28] text-white shadow-sm ring-2 ring-[#4a5c28]/20"
+								: "border border-[var(--jh-line-strong)] bg-white text-[var(--jh-ink)] hover:bg-[var(--jh-sage-pale)] hover:border-[#4a5c28]"
 						}`}
 					>
 						Prescriptions ({counts.system})
@@ -331,7 +352,7 @@ const Notification = () => {
 				{/* Notifications List */}
 				<div className="mt-6">
 					{loading ? (
-						<div className="py-12 text-center text-sm text-muted-foreground">Loading notifications...</div>
+						<div className="py-12 text-center text-sm font-medium text-muted-foreground">Loading notifications...</div>
 					) : error ? (
 						<div className="rounded-lg bg-destructive/10 p-4 text-center text-sm text-destructive">{error}</div>
 					) : filteredNotifications.length === 0 ? (
@@ -357,7 +378,7 @@ const Notification = () => {
 								return (
 									<li
 										key={notification._id}
-										className={`group relative flex flex-col justify-between gap-3.5 rounded-xl border border-[var(--jh-line-strong)] bg-white dark:bg-card p-4.5 shadow-[0_4px_16px_rgba(47,53,36,0.08)] transition-all hover:shadow-[0_8px_24px_rgba(47,53,36,0.12)] hover:border-[var(--jh-olive-action)] ${config.borderAccent} sm:flex-row sm:items-start`}
+										className={`group relative flex flex-col justify-between gap-3.5 rounded-xl border border-[var(--jh-line-strong)] bg-white dark:bg-card p-4.5 shadow-[0_4px_16px_rgba(47,53,36,0.08)] transition-all hover:shadow-[0_8px_24px_rgba(47,53,36,0.12)] hover:border-[#4a5c28] ${config.borderAccent} sm:flex-row sm:items-start`}
 									>
 										<div className="flex flex-1 items-start gap-3.5 min-w-0">
 											<div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-[var(--jh-sage-pale)] border border-[var(--jh-line)]">
@@ -386,7 +407,7 @@ const Notification = () => {
 															target="_blank"
 															rel="noopener noreferrer"
 															onClick={() => markAsRead(notification._id)}
-															className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--jh-olive-action)] px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[var(--jh-olive-hover)]"
+															className="inline-flex items-center gap-1.5 rounded-lg bg-[#4a5c28] px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#3a4a1f]"
 														>
 															<Video className="size-3.5" />
 															Join Video Call
@@ -398,7 +419,7 @@ const Notification = () => {
 														<button
 															type="button"
 															onClick={() => handleAction(notification)}
-															className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--jh-line-strong)] bg-[var(--jh-cream)] px-3 py-1.5 text-xs font-semibold text-[var(--jh-olive-deep)] shadow-xs transition-colors hover:bg-[var(--jh-sage-pale)] hover:border-[var(--jh-olive-action)]"
+															className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--jh-line-strong)] bg-[var(--jh-cream)] px-3 py-1.5 text-xs font-semibold text-[var(--jh-olive-deep)] shadow-xs transition-colors hover:bg-[var(--jh-sage-pale)] hover:border-[#4a5c28] cursor-pointer"
 														>
 															View Wellness Plan
 														</button>
@@ -408,7 +429,7 @@ const Notification = () => {
 														<button
 															type="button"
 															onClick={() => handleAction(notification)}
-															className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--jh-line-strong)] bg-[var(--jh-cream)] px-3 py-1.5 text-xs font-semibold text-[var(--jh-olive-deep)] shadow-xs transition-colors hover:bg-[var(--jh-sage-pale)] hover:border-[var(--jh-olive-action)]"
+															className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--jh-line-strong)] bg-[var(--jh-cream)] px-3 py-1.5 text-xs font-semibold text-[var(--jh-olive-deep)] shadow-xs transition-colors hover:bg-[var(--jh-sage-pale)] hover:border-[#4a5c28] cursor-pointer"
 														>
 															View Orders
 														</button>
@@ -423,7 +444,7 @@ const Notification = () => {
 											onClick={(e) => markAsRead(notification._id, e)}
 											title="Mark as read"
 											aria-label="Mark as read"
-											className="self-end sm:self-start shrink-0 rounded-full p-2 text-[var(--jh-muted)] hover:bg-[var(--jh-sage-pale)] hover:text-[var(--jh-olive-action)] border border-transparent hover:border-[var(--jh-line-strong)] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+											className="self-end sm:self-start shrink-0 rounded-full p-2 bg-[var(--jh-sage-pale)]/50 text-[var(--jh-muted)] hover:bg-[#4a5c28] hover:text-white border border-[var(--jh-line-strong)] transition-all cursor-pointer shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 										>
 											<Check className="size-4" />
 										</button>

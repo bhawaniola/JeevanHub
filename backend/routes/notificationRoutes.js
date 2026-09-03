@@ -7,8 +7,13 @@ const auth = require('../middleware/auth');
 // Get all notifications for a user
 router.get('/', auth, async (req, res) => {
   try {
-    const notifications = await Notification.find({ userId: req.user._id })
-      .sort({ createdAt: -1 });  // Sort by creation date, newest first
+    const uid = req.user._id;
+    const notifications = await Notification.find({
+      $or: [
+        { userId: uid },
+        { userId: uid.toString() }
+      ]
+    }).sort({ createdAt: -1 });
     
     res.json(notifications);
   } catch (err) {
@@ -22,8 +27,15 @@ router.get('/', auth, async (req, res) => {
 // Mark all notifications as read (supports both PATCH and PUT)
 const markAllReadHandler = async (req, res) => {
   try {
+    const uid = req.user._id;
     await Notification.updateMany(
-      { userId: req.user._id, isRead: false },
+      {
+        $or: [
+          { userId: uid },
+          { userId: uid.toString() }
+        ],
+        isRead: false
+      },
       { $set: { isRead: true } }
     );
     
@@ -46,7 +58,10 @@ const markSingleReadHandler = async (req, res) => {
     }
     
     // Check if this notification belongs to the authenticated user
-    if (notification.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    const userUid = req.user._id ? req.user._id.toString() : '';
+    const notifUid = notification.userId ? notification.userId.toString() : '';
+    
+    if (notifUid && userUid && notifUid !== userUid && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized' });
     }
     
