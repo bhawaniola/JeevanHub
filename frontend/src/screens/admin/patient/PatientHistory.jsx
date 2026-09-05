@@ -191,16 +191,29 @@ const History = ({ bookings = [] }) => {
 
 										{/* Prescribed Medicines Summary */}
 										{visit.medicines.length > 0 ? (
-											<div className="mt-1 rounded-md bg-secondary/40 p-2.5 border border-border/60 text-xs">
-												<p className="font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
+											<div className="mt-1 rounded-md bg-secondary/40 p-3 border border-border/60 text-xs">
+												<p className="font-semibold text-foreground mb-2 flex items-center gap-1.5">
 													<Pill size={13} className="text-(--jh-olive-leaf)" /> Prescribed Medicines ({visit.medicines.length}):
 												</p>
-												<div className="flex flex-col gap-1 text-muted-foreground">
+												<div className="flex flex-col gap-2">
 													{visit.medicines.map((med, idx) => (
-														<div key={med._id || idx} className="flex flex-wrap items-center gap-1.5">
-															<span className="font-medium text-foreground">• {med.medicineName}</span>
-															{med.dosage ? <span className="text-muted-foreground">({med.dosage})</span> : null}
-															{med.instructions ? <span className="italic text-muted-foreground/80">— {med.instructions}</span> : null}
+														<div key={med._id || idx} className="flex flex-col gap-1 rounded bg-card/80 p-2.5 border border-border/50">
+															<div>
+																<strong className="text-foreground">Medicine Name:</strong>{" "}
+																<span className="font-semibold text-foreground">{med.medicineName}</span>
+															</div>
+															{med.dosage ? (
+																<div>
+																	<strong className="text-foreground">Dosage:</strong>{" "}
+																	<span className="text-foreground/90">{med.dosage}</span>
+																</div>
+															) : null}
+															{med.instructions ? (
+																<div>
+																	<strong className="text-foreground">Instructions:</strong>{" "}
+																	<span className="italic text-muted-foreground">{med.instructions}</span>
+																</div>
+															) : null}
 														</div>
 													))}
 												</div>
