@@ -7,8 +7,13 @@ const auth = require('../middleware/auth');
 // Get all notifications for a user
 router.get('/', auth, async (req, res) => {
   try {
-    const notifications = await Notification.find({ userId: req.user._id })
-      .sort({ createdAt: -1 });  // Sort by creation date, newest first
+    const uid = req.user._id;
+    const notifications = await Notification.find({
+      $or: [
+        { userId: uid },
+        { userId: uid.toString() }
+      ]
+    }).sort({ createdAt: -1 });
     
     res.json(notifications);
   } catch (err) {
@@ -19,11 +24,18 @@ router.get('/', auth, async (req, res) => {
 
 // Create a new notification route removed (C4-8) - notifications must be generated server-side.
 
-// Mark all notifications as read
-router.patch('/read-all', auth, async (req, res) => {
+// Mark all notifications as read (supports both PATCH and PUT)
+const markAllReadHandler = async (req, res) => {
   try {
+    const uid = req.user._id;
     await Notification.updateMany(
-      { userId: req.user._id, isRead: false },
+      {
+        $or: [
+          { userId: uid },
+          { userId: uid.toString() }
+        ],
+        isRead: false
+      },
       { $set: { isRead: true } }
     );
     
@@ -32,10 +44,12 @@ router.patch('/read-all', auth, async (req, res) => {
     console.error('Error updating notifications:', err);
     res.status(500).json({ message: 'Server error' });
   }
-});
+};
+router.patch('/read-all', auth, markAllReadHandler);
+router.put('/read-all', auth, markAllReadHandler);
 
-// Mark a notification as read
-router.patch('/:id/read', auth, async (req, res) => {
+// Mark a notification as read (supports both PATCH and PUT)
+const markSingleReadHandler = async (req, res) => {
   try {
     const notification = await Notification.findById(req.params.id);
     
@@ -44,7 +58,10 @@ router.patch('/:id/read', auth, async (req, res) => {
     }
     
     // Check if this notification belongs to the authenticated user
-    if (notification.userId.toString() !== req.user._id.toString()) {
+    const userUid = req.user._id ? req.user._id.toString() : '';
+    const notifUid = notification.userId ? notification.userId.toString() : '';
+    
+    if (notifUid && userUid && notifUid !== userUid && req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Not authorized' });
     }
     
@@ -56,7 +73,9 @@ router.patch('/:id/read', auth, async (req, res) => {
     console.error('Error updating notification:', err);
     res.status(500).json({ message: 'Server error' });
   }
-});
+};
+router.patch('/:id/read', auth, markSingleReadHandler);
+router.put('/:id/read', auth, markSingleReadHandler);
 
 // Delete a notification
 router.delete('/:id', auth, async (req, res) => {
