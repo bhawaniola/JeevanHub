@@ -1761,7 +1761,7 @@ exports.getBookingById = async (req, res) => {
 	try {
 		const booking = await Booking.findById(id)
 			.populate('patientId', 'firstName lastName email phone gender age zipCode address profileImage')
-			.populate('patientSharedRecords.referencedBookingId', 'doctorName dateOfAppointment recommendedSupplements');
+			.populate('patientSharedRecords.referencedBookingId', 'doctorName dateOfAppointment recommendedSupplements diagnosis');
 
 		if (!booking) {
 			return res.status(404).json({ error: "Booking not found" });

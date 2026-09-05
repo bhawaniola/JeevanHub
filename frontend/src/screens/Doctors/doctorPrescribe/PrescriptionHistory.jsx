@@ -13,36 +13,82 @@ const SharedRecordCard = ({ record }) => {
 	const isFile = record.type === "external_file";
 	const ref = record.referencedBookingId;
 	const fileUrl = record.fileUrl?.startsWith("http") ? record.fileUrl : `${BACKEND}/${record.fileUrl}`;
+	const rawDoctor = ref?.doctorName || "Doctor";
+	const doctorLabel = rawDoctor.startsWith("Dr.") ? rawDoctor : `Dr. ${rawDoctor}`;
 
 	return (
-		<div className="flex flex-col gap-1.5 rounded-lg border border-accent bg-accent/40 p-3.5">
-			<Badge variant="outline" className="w-fit border-accent-foreground/30 text-accent-foreground uppercase">
-				Shared by patient — unverified
-			</Badge>
+		<div className="flex flex-col gap-2.5 rounded-lg border border-border/80 bg-secondary/50 p-3.5 shadow-xs">
+			<div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-2">
+				<Badge variant="outline" className="border-accent-foreground/30 bg-accent/40 text-accent-foreground uppercase text-[10px] font-semibold tracking-wider">
+					{isFile ? "External Document" : "Linked Platform Prescription"}
+				</Badge>
+				<span className="text-[11px] text-muted-foreground font-medium">
+					Shared {formatDate(record.uploadedAt)}
+				</span>
+			</div>
+
 			{isFile ? (
-				<a
-					href={fileUrl}
-					target="_blank"
-					rel="noopener noreferrer"
-					className="flex items-start gap-1.5 text-sm font-medium text-accent-foreground hover:underline"
-				>
-					<FileText size={16} className="mt-0.5 shrink-0" /> View uploaded document
-				</a>
+				<div className="flex flex-col gap-1.5 py-1">
+					<a
+						href={fileUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline"
+					>
+						<FileText size={16} className="shrink-0" /> View Uploaded Prescription Document
+					</a>
+				</div>
 			) : ref ? (
-				<div className="flex items-start gap-1.5 text-sm font-medium text-accent-foreground">
-					<LinkIcon size={16} className="mt-0.5 shrink-0" />
-					<span>
-						Prescription from Dr. {ref.doctorName} on {formatDate(ref.dateOfAppointment)}
-						{ref.recommendedSupplements?.length > 0 ? (
-							<> — {ref.recommendedSupplements.map((s) => s.medicineName).join(", ")}</>
-						) : null}
-					</span>
+				<div className="flex flex-col gap-2 text-xs">
+					<div className="flex flex-wrap items-center justify-between gap-1.5">
+						<div>
+							<strong className="text-foreground">Prescribing Doctor:</strong>{" "}
+							<span className="font-semibold text-foreground">{doctorLabel}</span>
+						</div>
+						<div className="text-muted-foreground">
+							<strong className="text-foreground/80">Prescription Date:</strong> {formatDate(ref.dateOfAppointment)}
+						</div>
+					</div>
+
+					{ref.diagnosis ? (
+						<div>
+							<strong className="text-foreground">Diagnosis:</strong>{" "}
+							<span className="text-foreground/90">{ref.diagnosis}</span>
+						</div>
+					) : null}
+
+					{ref.recommendedSupplements?.length > 0 ? (
+						<div className="rounded bg-card/80 p-2.5 border border-border/60">
+							<p className="font-semibold text-foreground mb-1 flex items-center gap-1.5">
+								<Pill size={12} className="text-(--jh-olive-leaf)" /> Prescribed Medicines ({ref.recommendedSupplements.length}):
+							</p>
+							<div className="flex flex-col gap-1 text-muted-foreground">
+								{ref.recommendedSupplements.map((med, idx) => (
+									<div key={med._id || idx} className="flex flex-wrap items-center gap-1">
+										<span className="font-medium text-foreground">• {med.medicineName}</span>
+										{med.dosage ? <span>({med.dosage})</span> : null}
+										{med.instructions ? <span className="italic">— {med.instructions}</span> : null}
+									</div>
+								))}
+							</div>
+						</div>
+					) : (
+						<div>
+							<strong className="text-foreground">Medicines:</strong>{" "}
+							<span className="italic text-muted-foreground">None prescribed</span>
+						</div>
+					)}
 				</div>
 			) : (
-				<span className="text-sm font-medium text-accent-foreground">This reference is no longer available.</span>
+				<span className="text-xs font-medium text-muted-foreground italic">This referenced prescription is no longer available.</span>
 			)}
-			{record.note ? <p className="text-sm text-muted-foreground italic">&quot;{record.note}&quot;</p> : null}
-			<span className="text-xs font-semibold text-accent-foreground">Shared {formatDate(record.uploadedAt)}</span>
+
+			{record.note ? (
+				<div className="border-t border-border/50 pt-2 text-xs">
+					<strong className="text-foreground">Patient Note:</strong>{" "}
+					<span className="italic text-muted-foreground">&quot;{record.note}&quot;</span>
+				</div>
+			) : null}
 		</div>
 	);
 };
