@@ -1799,14 +1799,46 @@ exports.getDoctorPatientHistory = async (req, res) => {
 			return res.status(400).json({ error: "Doctor ID is required" });
 		}
 
-		const bookings = await Booking.find({
-			doctorId,
-			patientId,
-			requestAccept: 'accepted',
-			dateOfAppointment: { $lt: new Date() }
-		}).sort({ dateOfAppointment: -1 });
+		const [bookings, doctor] = await Promise.all([
+			Booking.find({
+				doctorId,
+				patientId,
+				requestAccept: 'accepted',
+				dateOfAppointment: { $lt: new Date() }
+			}).sort({ dateOfAppointment: -1 }),
+			Doctor.findById(doctorId)
+		]);
 
-		return res.status(200).json({ bookings });
+		const processedBookings = bookings.map(booking => {
+			const bookingObj = booking.toObject ? booking.toObject() : booking;
+
+			if (doctor && doctor.availableSlots && booking.slotId) {
+				const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date(booking.dateOfAppointment).getDay()];
+				const baseSlots = doctor.availableSlots[dayName] || [];
+				const baseSlot = baseSlots.find(s => s._id && s._id.toString() === booking.slotId.toString());
+				if (baseSlot) {
+					bookingObj.timeSlot = baseSlot.startTime;
+					bookingObj.timeSlotDuration = baseSlot.duration;
+				}
+			}
+
+			if (doctor && Array.isArray(doctor.scheduleOverrides) && booking.slotId) {
+				const bookingDateStr = new Date(booking.dateOfAppointment).toDateString();
+				const override = doctor.scheduleOverrides.find(o => {
+					return new Date(o.date).toDateString() === bookingDateStr &&
+						   o.targetSlotId && o.targetSlotId.toString() === booking.slotId.toString();
+				});
+
+				if (override && override.type === 'rescheduled') {
+					bookingObj.timeSlot = override.newStartTime;
+					if (override.newDuration) bookingObj.timeSlotDuration = override.newDuration;
+				}
+			}
+
+			return bookingObj;
+		});
+
+		return res.status(200).json({ bookings: processedBookings });
 	} catch (error) {
 		console.error("Error fetching doctor-patient history:", error);
 		return res.status(500).json({ error: "Server error" });
