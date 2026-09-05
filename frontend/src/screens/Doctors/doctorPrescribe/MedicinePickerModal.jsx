@@ -18,52 +18,119 @@ const resolveImages = (medicine) => {
 // Full-screen medicine browser the doctor uses to pick an inventory item to prescribe.
 export function MedicinePickerModal({ onSelect, onClose }) {
 	const [medicines, setMedicines] = useState([]);
+	const [categories, setCategories] = useState(["All"]);
 	const [loading, setLoading] = useState(true);
+	const [loadingMore, setLoadingMore] = useState(false);
 	const [error, setError] = useState(null);
 	const [searchTerm, setSearchTerm] = useState("");
+	const [debouncedSearch, setDebouncedSearch] = useState("");
 	const [selectedCategory, setSelectedCategory] = useState("All");
+
+	const [page, setPage] = useState(1);
+	const [totalPages, setTotalPages] = useState(1);
+	const [totalCount, setTotalCount] = useState(0);
 
 	const [detailMedicine, setDetailMedicine] = useState(null);
 	const [imageIndex, setImageIndex] = useState(0);
 
+	// 1. Fetch categories list once (extremely lightweight, ~1KB)
 	useEffect(() => {
-		const fetchMedicines = async () => {
+		const fetchCategories = async () => {
 			try {
-				const response = await fetch(`${BACKEND}/api/medicines?all=true`);
-				if (!response.ok) throw new Error("Failed to load medicines");
-				const data = await response.json();
-				setMedicines(Array.isArray(data) ? data : []);
-			} catch (err) {
-				console.error("Error loading medicines:", err);
-				setError(err.message);
-			} finally {
-				setLoading(false);
+				const res = await fetch(`${BACKEND}/api/medicines/categories`);
+				if (res.ok) {
+					const data = await res.json();
+					if (Array.isArray(data) && data.length > 0) {
+						setCategories(["All", ...data]);
+					}
+				}
+			} catch (e) {
+				console.error("Error fetching medicine categories:", e);
 			}
 		};
-		fetchMedicines();
+		fetchCategories();
 	}, []);
 
-	const categories = useMemo(() => {
-		const cats = new Set(medicines.map((m) => m.category).filter(Boolean));
-		return ["All", ...Array.from(cats).sort()];
-	}, [medicines]);
+	// 2. Debounce search input by 250ms
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedSearch(searchTerm);
+		}, 250);
+		return () => clearTimeout(timer);
+	}, [searchTerm]);
 
-	const filtered = useMemo(() => {
-		let list = medicines;
-		if (selectedCategory !== "All") {
-			list = list.filter((m) => m.category?.toLowerCase() === selectedCategory.toLowerCase());
+	// 3. Fetch paginated medicines on search or category filter change
+	useEffect(() => {
+		let active = true;
+		const fetchMedicines = async () => {
+			setLoading(true);
+			setError(null);
+			setPage(1);
+			try {
+				const params = new URLSearchParams();
+				params.append("limit", "24");
+				params.append("page", "1");
+				if (debouncedSearch.trim()) {
+					params.append("search", debouncedSearch.trim());
+				}
+				if (selectedCategory && selectedCategory !== "All") {
+					params.append("category", selectedCategory);
+				}
+
+				const res = await fetch(`${BACKEND}/api/medicines?${params.toString()}`);
+				if (!res.ok) throw new Error("Failed to load medicines");
+				const data = await res.json();
+				if (!active) return;
+
+				const list = Array.isArray(data) ? data : data.medicines || [];
+				const total = Array.isArray(data) ? data.length : data.total ?? list.length;
+				const pages = Array.isArray(data) ? 1 : data.totalPages ?? 1;
+
+				setMedicines(list);
+				setTotalCount(total);
+				setTotalPages(pages);
+			} catch (err) {
+				if (active) setError(err.message);
+			} finally {
+				if (active) setLoading(false);
+			}
+		};
+
+		fetchMedicines();
+		return () => {
+			active = false;
+		};
+	}, [debouncedSearch, selectedCategory]);
+
+	// 4. Load more items (infinite pagination)
+	const handleLoadMore = async () => {
+		if (loadingMore || page >= totalPages) return;
+		setLoadingMore(true);
+		try {
+			const nextPage = page + 1;
+			const params = new URLSearchParams();
+			params.append("limit", "24");
+			params.append("page", String(nextPage));
+			if (debouncedSearch.trim()) {
+				params.append("search", debouncedSearch.trim());
+			}
+			if (selectedCategory && selectedCategory !== "All") {
+				params.append("category", selectedCategory);
+			}
+
+			const res = await fetch(`${BACKEND}/api/medicines?${params.toString()}`);
+			if (!res.ok) throw new Error("Failed to load more medicines");
+			const data = await res.json();
+			const list = Array.isArray(data) ? data : data.medicines || [];
+
+			setMedicines((prev) => [...prev, ...list]);
+			setPage(nextPage);
+		} catch (err) {
+			console.error("Error loading more medicines:", err);
+		} finally {
+			setLoadingMore(false);
 		}
-		if (searchTerm.trim()) {
-			const q = searchTerm.toLowerCase();
-			list = list.filter(
-				(m) =>
-					m.name?.toLowerCase().includes(q) ||
-					m.category?.toLowerCase().includes(q) ||
-					m.description?.toLowerCase().includes(q)
-			);
-		}
-		return list;
-	}, [medicines, searchTerm, selectedCategory]);
+	};
 
 	const openDetail = (medicine) => {
 		setDetailMedicine(medicine);
@@ -94,7 +161,7 @@ export function MedicinePickerModal({ onSelect, onClose }) {
 								<Pill className="size-5 text-primary" /> Select a Medicine from Inventory
 							</DialogTitle>
 							<Badge variant="secondary" className="text-xs font-semibold">
-								{filtered.length} {filtered.length === 1 ? "medicine" : "medicines"} available
+								{totalCount} {totalCount === 1 ? "medicine" : "medicines"} available
 							</Badge>
 						</div>
 					)}
@@ -242,73 +309,96 @@ export function MedicinePickerModal({ onSelect, onClose }) {
 								</div>
 							) : error ? (
 								<div className="flex items-center justify-center py-20 text-sm text-destructive">{error}</div>
-							) : filtered.length === 0 ? (
+							) : medicines.length === 0 ? (
 								<div className="flex flex-col items-center justify-center gap-2 py-20 text-center">
 									<Pill className="size-10 text-muted-foreground/40" />
 									<p className="text-sm font-medium text-muted-foreground">No medicines match your search criteria.</p>
 								</div>
 							) : (
-								<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-									{filtered.map((medicine) => {
-										const img = resolveImages(medicine)[0];
-										return (
-											<div
-												key={medicine._id}
-												className="group flex flex-col justify-between overflow-hidden rounded-xl border border-border/80 bg-card shadow-xs transition-all duration-200 hover:-translate-y-1 hover:border-primary hover:shadow-md cursor-pointer"
-												onClick={() => openDetail(medicine)}
-											>
-												{/* Image Container */}
-												<div className="relative aspect-4/3 w-full overflow-hidden bg-secondary/30 flex items-center justify-center p-2.5 border-b border-border/50">
-													<img
-														src={img}
-														alt={medicine.name}
-														className="size-full object-contain transition-transform duration-300 group-hover:scale-105"
-														loading="lazy"
-														onError={(e) => {
-															e.currentTarget.onerror = null;
-															e.currentTarget.src = FALLBACK_IMAGE;
-														}}
-													/>
-													{medicine.category ? (
-														<span className="absolute top-2 left-2 rounded-md bg-card/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold text-foreground border border-border/60 shadow-xs">
-															{medicine.category}
-														</span>
-													) : null}
-													{medicine.quantity !== undefined && medicine.quantity <= 0 ? (
-														<span className="absolute top-2 right-2 rounded-md bg-destructive text-white px-2 py-0.5 text-[10px] font-bold shadow-xs">
-															Out of stock
-														</span>
-													) : null}
-												</div>
-
-												{/* Card Body */}
-												<div className="flex flex-1 flex-col p-3.5 gap-2">
-													<div className="flex-1">
-														<h4 className="font-bold text-sm text-foreground line-clamp-1 group-hover:text-primary transition-colors" title={medicine.name}>
-															{medicine.name}
-														</h4>
-														<p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed min-h-[2rem]">
-															{medicine.description || "Ayurvedic formulation"}
-														</p>
-													</div>
-
-													<div className="flex items-center justify-between pt-2.5 border-t border-border/60 mt-auto">
-														<span className="text-base font-extrabold text-primary">₹{medicine.price}</span>
-														<Button
-															size="sm"
-															className="h-8 px-3 text-xs gap-1.5 font-semibold"
-															onClick={(e) => {
-																e.stopPropagation();
-																confirmSelect(medicine);
+								<div className="flex flex-col gap-6">
+									<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+										{medicines.map((medicine) => {
+											const img = resolveImages(medicine)[0];
+											return (
+												<div
+													key={medicine._id}
+													className="group flex flex-col justify-between overflow-hidden rounded-xl border border-border/80 bg-card shadow-xs transition-all duration-200 hover:-translate-y-1 hover:border-primary hover:shadow-md cursor-pointer"
+													onClick={() => openDetail(medicine)}
+												>
+													{/* Image Container */}
+													<div className="relative aspect-4/3 w-full overflow-hidden bg-secondary/30 flex items-center justify-center p-2.5 border-b border-border/50">
+														<img
+															src={img}
+															alt={medicine.name}
+															className="size-full object-contain transition-transform duration-300 group-hover:scale-105"
+															loading="lazy"
+															onError={(e) => {
+																e.currentTarget.onerror = null;
+																e.currentTarget.src = FALLBACK_IMAGE;
 															}}
-														>
-															<Check size={14} /> Select
-														</Button>
+														/>
+														{medicine.category ? (
+															<span className="absolute top-2 left-2 rounded-md bg-card/90 backdrop-blur-xs px-2 py-0.5 text-[10px] font-semibold text-foreground border border-border/60 shadow-xs">
+																{medicine.category}
+															</span>
+														) : null}
+														{medicine.quantity !== undefined && medicine.quantity <= 0 ? (
+															<span className="absolute top-2 right-2 rounded-md bg-destructive text-white px-2 py-0.5 text-[10px] font-bold shadow-xs">
+																Out of stock
+															</span>
+														) : null}
+													</div>
+
+													{/* Card Body */}
+													<div className="flex flex-1 flex-col p-3.5 gap-2">
+														<div className="flex-1">
+															<h4 className="font-bold text-sm text-foreground line-clamp-1 group-hover:text-primary transition-colors" title={medicine.name}>
+																{medicine.name}
+															</h4>
+															<p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed min-h-[2rem]">
+																{medicine.description || "Ayurvedic formulation"}
+															</p>
+														</div>
+
+														<div className="flex items-center justify-between pt-2.5 border-t border-border/60 mt-auto">
+															<span className="text-base font-extrabold text-primary">₹{medicine.price}</span>
+															<Button
+																size="sm"
+																className="h-8 px-3 text-xs gap-1.5 font-semibold"
+																onClick={(e) => {
+																	e.stopPropagation();
+																	confirmSelect(medicine);
+																}}
+															>
+																<Check size={14} /> Select
+															</Button>
+														</div>
 													</div>
 												</div>
-											</div>
-										);
-									})}
+											);
+										})}
+									</div>
+
+									{/* Load More Button */}
+									{page < totalPages ? (
+										<div className="flex justify-center pb-4 pt-2">
+											<Button
+												variant="outline"
+												size="sm"
+												onClick={handleLoadMore}
+												disabled={loadingMore}
+												className="min-w-[160px] gap-2 font-semibold"
+											>
+												{loadingMore ? (
+													<>
+														<Loader2 className="size-4 animate-spin" /> Loading more...
+													</>
+												) : (
+													`Load More (${totalCount - medicines.length} remaining)`
+												)}
+											</Button>
+										</div>
+									) : null}
 								</div>
 							)}
 						</div>

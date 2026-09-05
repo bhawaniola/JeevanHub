@@ -1468,7 +1468,10 @@ exports.getRecommendedSupplements = async (req, res) => {
 	const { id } = req.params;
 
 	try {
-		const booking = await Booking.findById(id);
+		const booking = await Booking.findById(id).populate({
+			path: 'recommendedSupplements.medicineId',
+			select: 'images price name category quantity'
+		});
 
 		if (!booking) {
 			return res.status(404).json({ error: "Booking not found" });
