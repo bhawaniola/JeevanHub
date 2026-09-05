@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatDateReadable } from "@/lib/date";
 
 const parseAppointmentDateTime = (dateString, timeSlot) => {
 	const appointmentDate = new Date(dateString);
@@ -462,17 +463,35 @@ function AppointmentHistory() {
 												)}
 
 												{isExpanded ? (
-													<ul className="mt-2 flex flex-col gap-1.5 rounded-(--jh-radius-md) bg-secondary/60 p-3 text-xs text-foreground/80">
+													<div className="mt-2.5 flex flex-col gap-2 rounded-(--jh-radius-md) bg-secondary/50 p-3 text-xs text-foreground/80 border border-border/60">
 														{prescriptions.map((supplement, idx) => (
-															<li key={idx}>
-																<strong className="text-foreground">{supplement.medicineName}</strong>
-																{supplement.dosage ? ` — ${supplement.dosage}` : ""}
-																<span className="ml-1 text-muted-foreground">
-																	({new Date(supplement.visitDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })})
-																</span>
-															</li>
+															<div key={idx} className="flex flex-col gap-1 rounded bg-card/80 p-2.5 border border-border/50">
+																<div className="flex flex-wrap items-center justify-between gap-2">
+																	<div>
+																		<strong className="text-foreground">Medicine Name:</strong>{" "}
+																		<span className="font-semibold text-foreground">{supplement.medicineName}</span>
+																	</div>
+																	{supplement.visitDate ? (
+																		<div className="text-muted-foreground font-medium">
+																			<strong className="text-foreground/80">Prescribed Date:</strong> {formatDateReadable(supplement.visitDate)}
+																		</div>
+																	) : null}
+																</div>
+																{supplement.dosage ? (
+																	<div>
+																		<strong className="text-foreground">Dosage:</strong>{" "}
+																		<span>{supplement.dosage}</span>
+																	</div>
+																) : null}
+																{supplement.instructions ? (
+																	<div>
+																		<strong className="text-foreground">Instructions:</strong>{" "}
+																		<span className="italic">{supplement.instructions}</span>
+																	</div>
+																) : null}
+															</div>
 														))}
-													</ul>
+													</div>
 												) : null}
 											</div>
 
