@@ -9,6 +9,7 @@ import { DashboardShell, DashboardPageHeader } from "@/components/layout/Dashboa
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { formatDateReadable } from "@/lib/date";
 import { MedicalHistoryViewer } from "./doctorPrescribe/MedicalHistoryViewer";
 
 const format12HourTime = (timeStr) => {
@@ -142,7 +143,7 @@ function PatientDetail() {
 										<div className="flex flex-col gap-1 text-sm text-foreground/80">
 											<span className="flex items-center gap-1.5">
 												<Calendar className="size-4 text-muted-foreground" />
-												{new Date(visit.dateOfAppointment).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+												{formatDateReadable(visit.dateOfAppointment)}
 											</span>
 											{visit.timeSlot ? (
 												<span className="flex items-center gap-1.5">
@@ -155,8 +156,21 @@ function PatientDetail() {
 										</Badge>
 									</div>
 
+									{/* 1. Reason for Visit */}
+									<p className="mt-3 text-xs text-muted-foreground">
+										<strong className="text-foreground">Reason for Visit:</strong>{" "}
+										{visit.patientIllness || <span className="italic text-muted-foreground/75">Not specified</span>}
+									</p>
+
+									{/* 2. Diagnosis */}
+									<p className="mt-1.5 text-xs text-muted-foreground">
+										<strong className="text-foreground">Diagnosis:</strong>{" "}
+										{visit.diagnosis ? visit.diagnosis : <span className="italic text-muted-foreground/75">Not given</span>}
+									</p>
+
+									{/* 3. Medicines Prescribed (below Reason for Visit & Diagnosis) */}
 									{visit.recommendedSupplements?.length > 0 ? (
-										<div className="mt-2">
+										<div className="mt-2.5">
 											<button
 												type="button"
 												onClick={() => toggleMedicines(visit._id)}
@@ -171,30 +185,38 @@ function PatientDetail() {
 											</button>
 
 											{expandedMedicines[visit._id] ? (
-												<div className="mt-2 pl-5 flex flex-col gap-1 text-xs text-muted-foreground border-l-2 border-border ml-1.5">
+												<div className="mt-2.5 pl-4 flex flex-col gap-2.5 text-xs text-muted-foreground border-l-2 border-border ml-1.5">
 													{visit.recommendedSupplements.map((med, idx) => (
-														<div key={med._id || idx} className="flex flex-wrap items-center gap-1.5">
-															<span className="font-semibold text-foreground">• {med.medicineName}</span>
-															{med.dosage ? <span className="text-muted-foreground">({med.dosage})</span> : null}
-															{med.instructions ? <span className="italic text-muted-foreground/80">— {med.instructions}</span> : null}
+														<div key={med._id || idx} className="flex flex-col gap-1 rounded-md bg-secondary/30 p-2.5 border border-border/60">
+															<div>
+																<strong className="text-foreground">Medicine Name:</strong>{" "}
+																<span className="font-semibold text-foreground">{med.medicineName}</span>
+															</div>
+															{med.dosage ? (
+																<div>
+																	<strong className="text-foreground">Dosage:</strong>{" "}
+																	<span>{med.dosage}</span>
+																</div>
+															) : null}
+															{med.instructions ? (
+																<div>
+																	<strong className="text-foreground">Instructions:</strong>{" "}
+																	<span className="italic">{med.instructions}</span>
+																</div>
+															) : null}
 														</div>
 													))}
 												</div>
 											) : null}
 										</div>
-									) : null}
-
-									{visit.patientIllness ? (
-										<p className="mt-2 text-xs text-muted-foreground">
-											<strong className="text-foreground">Reason for Visit:</strong> {visit.patientIllness}
+									) : (
+										<p className="mt-1.5 text-xs text-muted-foreground">
+											<strong className="text-foreground">Medicines:</strong>{" "}
+											<span className="italic text-muted-foreground/75">None prescribed</span>
 										</p>
-									) : null}
+									)}
 
-									<p className="mt-1 text-xs text-muted-foreground">
-										<strong className="text-foreground">Diagnosis:</strong> {visit.diagnosis ? visit.diagnosis : <span className="italic text-muted-foreground/75">Not given</span>}
-									</p>
-
-									<Button size="sm" variant="outline" className="mt-3" onClick={() => navigate(`/doctorsprescribe/${visit._id}`)}>
+									<Button size="sm" variant="outline" className="mt-3.5" onClick={() => navigate(`/doctorsprescribe/${visit._id}`)}>
 										View / Edit Prescription
 									</Button>
 								</div>
