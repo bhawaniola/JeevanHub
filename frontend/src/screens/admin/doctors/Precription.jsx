@@ -61,19 +61,15 @@ const DoctorPrescriptions = ({ doctorId }) => {
 										</div>
 									</div>
 
-									{s.dosage ? (
-										<p className="text-sm text-foreground/90">
-											<span className="font-medium text-muted-foreground">Dosage: </span>
-											<span>{s.dosage}</span>
-										</p>
-									) : null}
+									<p className="text-sm text-foreground/90">
+										<span className="font-medium text-muted-foreground">Dosage: </span>
+										<span>{s.dosage || <span className="italic text-muted-foreground">Not provided</span>}</span>
+									</p>
 
-									{s.instructions ? (
-										<p className="text-sm text-foreground/90">
-											<span className="font-medium text-muted-foreground">Instructions: </span>
-											<span className="italic">{s.instructions}</span>
-										</p>
-									) : null}
+									<p className="text-sm text-foreground/90">
+										<span className="font-medium text-muted-foreground">Instructions: </span>
+										<span className="italic">{s.instructions || <span className="not-italic text-muted-foreground">Not provided</span>}</span>
+									</p>
 
 									{s.forIllness ? (
 										<p className="text-sm text-foreground/90">

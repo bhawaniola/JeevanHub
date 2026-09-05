@@ -180,13 +180,13 @@ const History = ({ bookings = [] }) => {
 										{/* Reason for Visit */}
 										<p className="text-xs text-muted-foreground">
 											<strong className="text-foreground">Reason for Visit:</strong>{" "}
-											{visit.patientIllness || <span className="italic text-muted-foreground/75">Not specified</span>}
+											{visit.patientIllness || <span className="italic text-muted-foreground/75">Not provided</span>}
 										</p>
 
 										{/* Diagnosis */}
 										<p className="text-xs text-muted-foreground">
 											<strong className="text-foreground">Diagnosis:</strong>{" "}
-											{visit.diagnosis ? visit.diagnosis : <span className="italic text-muted-foreground/75">Not given</span>}
+											{visit.diagnosis ? visit.diagnosis : <span className="italic text-muted-foreground/75">Not provided</span>}
 										</p>
 
 										{/* Prescribed Medicines Summary */}
@@ -200,20 +200,16 @@ const History = ({ bookings = [] }) => {
 														<div key={med._id || idx} className="flex flex-col gap-1 rounded bg-card/80 p-2.5 border border-border/50">
 															<div>
 																<strong className="text-foreground">Medicine Name:</strong>{" "}
-																<span className="font-semibold text-foreground">{med.medicineName}</span>
+																<span className="font-semibold text-foreground">{med.medicineName || "Not provided"}</span>
 															</div>
-															{med.dosage ? (
-																<div>
-																	<strong className="text-foreground">Dosage:</strong>{" "}
-																	<span className="text-foreground/90">{med.dosage}</span>
-																</div>
-															) : null}
-															{med.instructions ? (
-																<div>
-																	<strong className="text-foreground">Instructions:</strong>{" "}
-																	<span className="italic text-muted-foreground">{med.instructions}</span>
-																</div>
-															) : null}
+															<div>
+																<strong className="text-foreground">Dosage:</strong>{" "}
+																<span className="text-foreground/90">{med.dosage || <span className="italic text-muted-foreground/75">Not provided</span>}</span>
+															</div>
+															<div>
+																<strong className="text-foreground">Instructions:</strong>{" "}
+																<span className="text-foreground/90">{med.instructions ? <span className="italic text-muted-foreground">{med.instructions}</span> : <span className="italic text-muted-foreground/75">Not provided</span>}</span>
+															</div>
 														</div>
 													))}
 												</div>
@@ -221,7 +217,7 @@ const History = ({ bookings = [] }) => {
 										) : (
 											<p className="text-xs text-muted-foreground">
 												<strong className="text-foreground">Medicines:</strong>{" "}
-												<span className="italic text-muted-foreground/75">None prescribed</span>
+												<span className="italic text-muted-foreground/75">Not provided</span>
 											</p>
 										)}
 

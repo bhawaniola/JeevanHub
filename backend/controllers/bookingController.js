@@ -768,7 +768,7 @@ exports.getOwnBookingsForSharing = async (req, res) => {
 		}
 
 		const bookings = await Booking.find(filter)
-			.select('doctorName dateOfAppointment recommendedSupplements')
+			.select('doctorName dateOfAppointment recommendedSupplements diagnosis patientIllness')
 			.sort({ dateOfAppointment: -1 });
 
 		return res.status(200).json({ bookings });
@@ -1761,7 +1761,7 @@ exports.getBookingById = async (req, res) => {
 	try {
 		const booking = await Booking.findById(id)
 			.populate('patientId', 'firstName lastName email phone gender age zipCode address profileImage')
-			.populate('patientSharedRecords.referencedBookingId', 'doctorName dateOfAppointment recommendedSupplements diagnosis');
+			.populate('patientSharedRecords.referencedBookingId', 'doctorName dateOfAppointment recommendedSupplements diagnosis patientIllness');
 
 		if (!booking) {
 			return res.status(404).json({ error: "Booking not found" });

@@ -64,9 +64,9 @@ const PrescriptionSummary = ({ diagnosis, supplements }) => {
 	} else if (hasDiagnosis) {
 		headerTitle = `Diagnosis recorded · Medicines not provided`;
 	} else if (hasSupplements) {
-		headerTitle = `Diagnosis not given · ${count} medicine${count > 1 ? "s" : ""} prescribed`;
+		headerTitle = `Diagnosis not provided · ${count} medicine${count > 1 ? "s" : ""} prescribed`;
 	} else {
-		headerTitle = "Diagnosis not given · Medicines not provided";
+		headerTitle = "Diagnosis not provided · Medicines not provided";
 	}
 
 	return (
@@ -91,7 +91,7 @@ const PrescriptionSummary = ({ diagnosis, supplements }) => {
 					) : (
 						<p className="flex items-start gap-1.5 text-xs text-muted-foreground">
 							<Stethoscope size={13} className="mt-0.5 shrink-0" />
-							<span><strong>Diagnosis:</strong> Not given</span>
+							<span><strong>Diagnosis:</strong> Not provided</span>
 						</p>
 					)}
 
@@ -102,7 +102,7 @@ const PrescriptionSummary = ({ diagnosis, supplements }) => {
 									<div className="flex items-center justify-between gap-2">
 										<span className="font-semibold text-foreground">
 											<span className="font-medium text-muted-foreground">Medicine: </span>
-											{s.medicineName}
+											{s.medicineName || "Not provided"}
 										</span>
 										{s.medicineId ? (
 											<Link
@@ -113,16 +113,12 @@ const PrescriptionSummary = ({ diagnosis, supplements }) => {
 											</Link>
 										) : null}
 									</div>
-									{s.dosage ? (
-										<span className="text-xs text-muted-foreground">
-											<strong>Dosage:</strong> {s.dosage}
-										</span>
-									) : null}
-									{s.instructions ? (
-										<span className="text-xs text-muted-foreground">
-											<strong>Instructions:</strong> {s.instructions}
-										</span>
-									) : null}
+									<span className="text-xs text-muted-foreground">
+										<strong>Dosage:</strong> {s.dosage || "Not provided"}
+									</span>
+									<span className="text-xs text-muted-foreground">
+										<strong>Instructions:</strong> {s.instructions || "Not provided"}
+									</span>
 								</div>
 							))}
 						</div>
@@ -225,7 +221,7 @@ const IllnessSection = ({ appointmentId, illness, editable, onSaved }) => {
 					</button>
 				) : null}
 			</span>
-			<p className="mt-1 text-sm text-foreground">{illness || "Not specified"}</p>
+			<p className="mt-1 text-sm text-foreground">{illness || "Not provided"}</p>
 		</div>
 	);
 };

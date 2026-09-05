@@ -39,19 +39,15 @@ const Prescription = ({ patientBookings }) => {
 										</div>
 									</div>
 
-									{supp.dosage ? (
-										<p className="text-sm text-foreground/90">
-											<span className="font-medium text-muted-foreground">Dosage: </span>
-											<span>{supp.dosage}</span>
-										</p>
-									) : null}
+									<p className="text-sm text-foreground/90">
+										<span className="font-medium text-muted-foreground">Dosage: </span>
+										<span>{supp.dosage || <span className="italic text-muted-foreground">Not provided</span>}</span>
+									</p>
 
-									{supp.instructions ? (
-										<p className="text-sm text-foreground/90">
-											<span className="font-medium text-muted-foreground">Instructions: </span>
-											<span className="italic">{supp.instructions}</span>
-										</p>
-									) : null}
+									<p className="text-sm text-foreground/90">
+										<span className="font-medium text-muted-foreground">Instructions: </span>
+										<span className="italic">{supp.instructions || <span className="not-italic text-muted-foreground">Not provided</span>}</span>
+									</p>
 
 									{supp.forIllness ? (
 										<p className="text-sm text-foreground/90">

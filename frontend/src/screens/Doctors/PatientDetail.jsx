@@ -159,13 +159,13 @@ function PatientDetail() {
 									{/* 1. Reason for Visit */}
 									<p className="mt-3 text-xs text-muted-foreground">
 										<strong className="text-foreground">Reason for Visit:</strong>{" "}
-										{visit.patientIllness || <span className="italic text-muted-foreground/75">Not specified</span>}
+										{visit.patientIllness || <span className="italic text-muted-foreground/75">Not provided</span>}
 									</p>
 
 									{/* 2. Diagnosis */}
 									<p className="mt-1.5 text-xs text-muted-foreground">
 										<strong className="text-foreground">Diagnosis:</strong>{" "}
-										{visit.diagnosis ? visit.diagnosis : <span className="italic text-muted-foreground/75">Not given</span>}
+										{visit.diagnosis ? visit.diagnosis : <span className="italic text-muted-foreground/75">Not provided</span>}
 									</p>
 
 									{/* 3. Medicines Prescribed (below Reason for Visit & Diagnosis) */}
@@ -190,20 +190,16 @@ function PatientDetail() {
 														<div key={med._id || idx} className="flex flex-col gap-1 rounded-md bg-secondary/30 p-2.5 border border-border/60">
 															<div>
 																<strong className="text-foreground">Medicine Name:</strong>{" "}
-																<span className="font-semibold text-foreground">{med.medicineName}</span>
+																<span className="font-semibold text-foreground">{med.medicineName || "Not provided"}</span>
 															</div>
-															{med.dosage ? (
-																<div>
-																	<strong className="text-foreground">Dosage:</strong>{" "}
-																	<span>{med.dosage}</span>
-																</div>
-															) : null}
-															{med.instructions ? (
-																<div>
-																	<strong className="text-foreground">Instructions:</strong>{" "}
-																	<span className="italic">{med.instructions}</span>
-																</div>
-															) : null}
+															<div>
+																<strong className="text-foreground">Dosage:</strong>{" "}
+																<span>{med.dosage || <span className="italic text-muted-foreground/75">Not provided</span>}</span>
+															</div>
+															<div>
+																<strong className="text-foreground">Instructions:</strong>{" "}
+																<span className="italic">{med.instructions || <span className="not-italic text-muted-foreground/75">Not provided</span>}</span>
+															</div>
 														</div>
 													))}
 												</div>
@@ -212,7 +208,7 @@ function PatientDetail() {
 									) : (
 										<p className="mt-1.5 text-xs text-muted-foreground">
 											<strong className="text-foreground">Medicines:</strong>{" "}
-											<span className="italic text-muted-foreground/75">None prescribed</span>
+											<span className="italic text-muted-foreground/75">Not provided</span>
 										</p>
 									)}
 
