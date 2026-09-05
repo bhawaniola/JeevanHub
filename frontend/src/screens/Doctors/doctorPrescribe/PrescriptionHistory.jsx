@@ -58,16 +58,29 @@ const SharedRecordCard = ({ record }) => {
 					) : null}
 
 					{ref.recommendedSupplements?.length > 0 ? (
-						<div className="rounded bg-card/80 p-2.5 border border-border/60">
-							<p className="font-semibold text-foreground mb-1 flex items-center gap-1.5">
+						<div className="rounded-md bg-card/90 p-2.5 border border-border/60">
+							<p className="font-semibold text-foreground mb-2 flex items-center gap-1.5 text-xs">
 								<Pill size={12} className="text-(--jh-olive-leaf)" /> Prescribed Medicines ({ref.recommendedSupplements.length}):
 							</p>
-							<div className="flex flex-col gap-1 text-muted-foreground">
+							<div className="flex flex-col gap-2">
 								{ref.recommendedSupplements.map((med, idx) => (
-									<div key={med._id || idx} className="flex flex-wrap items-center gap-1">
-										<span className="font-medium text-foreground">• {med.medicineName}</span>
-										{med.dosage ? <span>({med.dosage})</span> : null}
-										{med.instructions ? <span className="italic">— {med.instructions}</span> : null}
+									<div key={med._id || idx} className="flex flex-col gap-1 rounded bg-secondary/40 p-2 border border-border/50 text-[11px]">
+										<div>
+											<strong className="text-foreground">Medicine Name:</strong>{" "}
+											<span className="font-semibold text-foreground">{med.medicineName}</span>
+										</div>
+										{med.dosage ? (
+											<div>
+												<strong className="text-foreground">Dosage:</strong>{" "}
+												<span className="text-foreground/90">{med.dosage}</span>
+											</div>
+										) : null}
+										{med.instructions ? (
+											<div>
+												<strong className="text-foreground">Instructions:</strong>{" "}
+												<span className="italic text-muted-foreground">{med.instructions}</span>
+											</div>
+										) : null}
 									</div>
 								))}
 							</div>
