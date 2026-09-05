@@ -5,13 +5,9 @@ import { BACKEND_URL } from "../../../config";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { formatDate } from "@/lib/date";
 
 const BACKEND = BACKEND_URL || "http://localhost:8080";
-
-const formatDate = (dateString) => {
-	if (!dateString) return "N/A";
-	return new Date(dateString).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
-};
 
 const SharedRecordCard = ({ record }) => {
 	const isFile = record.type === "external_file";

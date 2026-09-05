@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { formatDate } from "@/lib/date";
 
 const STATUS_TABS = [
 	{ value: "pending", label: "Received" },
@@ -85,7 +86,7 @@ function MyOrders() {
 								<strong className="text-foreground">Buyer Name:</strong> {order.customerName}
 							</p>
 							<p className="mb-2">
-								<strong className="text-foreground">Order Receiving Date:</strong> {new Date(order.date).toLocaleDateString()}
+								<strong className="text-foreground">Order Receiving Date:</strong> {formatDate(order.date)}
 							</p>
 							<p className="mb-2">
 								<strong className="text-foreground">Shipping Address:</strong>{" "}

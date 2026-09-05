@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/date";
 import { AuthContext } from "../../context/AuthContext";
 import { authFetch } from "../../utils/authFetch";
 import { BACKEND_URL, RAZORPAY_KEY_ID } from "../../config";
@@ -391,10 +392,10 @@ function DoctorDetail() {
 		const tomorrow = new Date();
 		tomorrow.setDate(today.getDate() + 1);
 
-		const dateStr = dateObj.toLocaleDateString();
-		if (dateStr === today.toLocaleDateString()) return "Today";
-		if (dateStr === tomorrow.toLocaleDateString()) return "Tomorrow";
-		return dateObj.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" });
+		const dateStr = formatDate(dateObj);
+		if (dateStr === formatDate(today)) return "Today";
+		if (dateStr === formatDate(tomorrow)) return "Tomorrow";
+		return dateObj.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
 	};
 
 	const isSlotPassed = (timeStr) => {
@@ -475,7 +476,7 @@ function DoctorDetail() {
 											</span>
 										</p>
 										<p className="mt-1 text-sm text-muted-foreground">{r.review}</p>
-										<p className="mt-1 text-xs text-muted-foreground">{new Date(r.dateOfAppointment).toLocaleDateString()}</p>
+										<p className="mt-1 text-xs text-muted-foreground">{formatDate(r.dateOfAppointment)}</p>
 									</div>
 								))}
 							</div>

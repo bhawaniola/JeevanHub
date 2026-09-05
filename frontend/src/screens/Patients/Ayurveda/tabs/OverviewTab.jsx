@@ -2,6 +2,7 @@ import { CheckCircle2, RefreshCw, Sparkles, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { formatDate } from "@/lib/date";
 
 // `isDoctorView`: the doctor's escape hatch when the patient hasn't
 // generated a plan yet -- one concise Generate button, same as the
@@ -44,7 +45,7 @@ function OverviewTab({ plan, isStale, readOnly, isDoctorView, onRegenerate, onDe
 			{isStale ? (
 				<Badge variant="warning">Plan may be outdated -- profile or assessment changed since it was generated</Badge>
 			) : (
-				<span className="text-xs text-muted-foreground">Generated {new Date(plan.generatedAt).toLocaleDateString()}</span>
+				<span className="text-xs text-muted-foreground">Generated {formatDate(plan.generatedAt)}</span>
 			)}
 			<div className="flex gap-2">
 				<Button size="sm" variant="outline" onClick={onRegenerate} disabled={generating}>

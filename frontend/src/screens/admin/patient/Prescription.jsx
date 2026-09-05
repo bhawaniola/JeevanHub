@@ -4,6 +4,7 @@ import { Pill } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { formatDate } from "@/lib/date";
 import { FieldStat } from "./shared";
 
 const Prescription = ({ patientBookings }) => {
@@ -38,7 +39,7 @@ const Prescription = ({ patientBookings }) => {
 								</div>
 
 								<p className="mt-4 text-xs text-muted-foreground">
-									Prescribed on {new Date(booking.createdAt).toLocaleDateString()}
+									Prescribed on {formatDate(booking.createdAt)}
 								</p>
 							</div>
 						))

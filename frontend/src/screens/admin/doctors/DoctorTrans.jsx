@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { formatDate } from "@/lib/date";
 import { authFetch } from "../../../utils/authFetch";
 import { BACKEND_URL } from "../../../config";
 
@@ -154,7 +155,7 @@ const Transactions = ({ doctorId }) => {
 							filteredTransactions.map((t) => (
 								<TableRow key={t.id}>
 									<TableCell className="font-mono text-xs text-muted-foreground">{t.id}</TableCell>
-									<TableCell>{new Date(t.date).toLocaleDateString()}</TableCell>
+									<TableCell>{formatDate(t.date)}</TableCell>
 									<TableCell className="font-medium text-foreground">{t.patient || "N/A"}</TableCell>
 									<TableCell>
 										{t.description}{" "}

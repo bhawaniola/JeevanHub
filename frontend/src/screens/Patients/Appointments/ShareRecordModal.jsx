@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PatientVerificationPanel } from "@/components/PatientVerificationPanel";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/date";
 import { AuthContext } from "../../../context/AuthContext";
 import { authFetch } from "../../../utils/authFetch";
 import { BACKEND_URL } from "../../../config";
@@ -244,7 +245,7 @@ const ShareRecordModal = ({ bookingId, onClose, onShared, initialMode = "upload"
 									onValueChange={setSelectedBookingId}
 									items={ownBookings.map((b) => ({
 										value: b._id,
-										label: `Dr. ${b.doctorName} — ${new Date(b.dateOfAppointment).toLocaleDateString()}${
+										label: `Dr. ${b.doctorName} — ${formatDate(b.dateOfAppointment)}${
 											b.recommendedSupplements?.length > 0
 												? ` (${b.recommendedSupplements.map((s) => s.medicineName).join(", ")})`
 												: ""
@@ -257,7 +258,7 @@ const ShareRecordModal = ({ bookingId, onClose, onShared, initialMode = "upload"
 									<SelectContent>
 										{ownBookings.map((b) => (
 											<SelectItem key={b._id} value={b._id}>
-												Dr. {b.doctorName} — {new Date(b.dateOfAppointment).toLocaleDateString()}
+												Dr. {b.doctorName} — {formatDate(b.dateOfAppointment)}
 												{b.recommendedSupplements?.length > 0
 													? ` (${b.recommendedSupplements.map((s) => s.medicineName).join(", ")})`
 													: ""}

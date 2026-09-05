@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { formatDate } from "@/lib/date";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AuthContext } from "../../context/AuthContext";
 import { BACKEND_URL } from "../../config";
@@ -102,9 +103,6 @@ const OrderHistory = () => {
 
 		if (userId) fetchOrders();
 	}, [userId, auth.token]);
-
-	const formatDate = (dateString) =>
-		new Date(dateString).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
 	const getImageUrl = (imagePath) => {
 		if (!imagePath) return FALLBACK_IMAGE;
@@ -298,7 +296,7 @@ const OrderHistory = () => {
 												{order.review.comment ? <p className="mt-1 text-sm text-foreground">{order.review.comment}</p> : null}
 												{order.review.deliveredAt ? (
 													<p className="mt-1 text-xs text-muted-foreground">
-														Delivered on {new Date(order.review.deliveredAt).toLocaleDateString()}
+														Delivered on {formatDate(order.review.deliveredAt)}
 													</p>
 												) : null}
 											</div>

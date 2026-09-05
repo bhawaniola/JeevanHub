@@ -1,6 +1,7 @@
 import { useLocation } from "react-router-dom";
 
 import { Card } from "@/components/ui/card";
+import { formatDate } from "@/lib/date";
 
 function BlogScreen() {
 	const location = useLocation();
@@ -21,7 +22,7 @@ function BlogScreen() {
 				)}
 				<p className="m-0 text-lg leading-relaxed text-foreground">{blog.description}</p>
 				<p className="m-0 text-sm font-medium text-muted-foreground">
-					Date Published: {new Date(blog.date).toLocaleDateString()}
+					Date Published: {formatDate(blog.date)}
 				</p>
 			</Card>
 		</div>

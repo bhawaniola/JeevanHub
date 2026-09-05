@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Pill, Clock } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
+import { formatDate } from "@/lib/date";
 import { authFetch } from "../../../utils/authFetch";
 import { BACKEND_URL } from "../../../config";
 
@@ -84,7 +85,7 @@ const DoctorPrescriptions = ({ doctorId }) => {
 										</div>
 									</div>
 									<p className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
-										<Clock className="size-3.5" /> Prescribed on {new Date(booking.createdAt).toLocaleDateString()}
+										<Clock className="size-3.5" /> Prescribed on {formatDate(booking.createdAt)}
 									</p>
 								</div>
 							))

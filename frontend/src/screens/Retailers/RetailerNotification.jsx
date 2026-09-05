@@ -8,6 +8,7 @@ import { DashboardShell, DashboardPageHeader } from "@/components/layout/Dashboa
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
+import { formatDate } from "@/lib/date";
 
 const relatedIcon = {
 	order: Package,
@@ -84,12 +85,12 @@ const NotificationsPage = () => {
 		}
 	};
 
-	const formatDate = (dateString) => {
+	const formatNotificationTime = (dateString) => {
 		const date = new Date(dateString);
-		return date.toLocaleDateString("en-US", {
-			year: "numeric",
-			month: "long",
+		return date.toLocaleDateString("en-GB", {
 			day: "numeric",
+			month: "long",
+			year: "numeric",
 			hour: "2-digit",
 			minute: "2-digit",
 		});
@@ -99,7 +100,7 @@ const NotificationsPage = () => {
 		const groups = {};
 
 		list.forEach((notification) => {
-			const date = new Date(notification.createdAt).toLocaleDateString();
+			const date = formatDate(notification.createdAt);
 			if (!groups[date]) {
 				groups[date] = [];
 			}

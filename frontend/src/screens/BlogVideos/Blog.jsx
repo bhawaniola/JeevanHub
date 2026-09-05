@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { renderTwitterEmbeds } from "@/lib/twitterWidgets";
+import { formatDate } from "@/lib/date";
 
 export default function Blog() {
 	const { state } = useLocation();
@@ -27,7 +28,7 @@ export default function Blog() {
 	}
 
 	const fullHtmlContent = blog.description || "<h2>Error: Content not found.</h2>";
-	const displayDate = blog.date ? new Date(blog.date).toLocaleDateString() : "Date unavailable";
+	const displayDate = formatDate(blog.date, "Date unavailable");
 	const mainImageUrl = blog.image;
 
 	return (

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useConfirm } from "@/context/PromptDialogContext";
+import { formatDate } from "@/lib/date";
 
 function HealthBlogs() {
 	const { auth } = useContext(AuthContext);
@@ -98,8 +99,8 @@ function HealthBlogs() {
 									{blog.category ? <Badge variant="secondary">{blog.category}</Badge> : null}
 									<span className="ml-auto text-xs text-muted-foreground">
 										{wasEdited
-											? `Updated ${new Date(blog.updatedAt).toLocaleDateString()}`
-											: new Date(blog.date).toLocaleDateString()}
+											? `Updated ${formatDate(blog.updatedAt)}`
+											: formatDate(blog.date)}
 									</span>
 									<Button variant="ghost" size="icon" onClick={() => navigate(`/health-blogs/edit/${blog._id}`)}>
 										<Pencil className="size-4" />

@@ -23,6 +23,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { formatDate } from "@/lib/date";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
@@ -338,7 +339,7 @@ const DoctorManagement = () => {
 		const csvRows = [headers.join(",")];
 		processedDoctors.forEach((d) => {
 			const specs = Array.isArray(d.specialization) ? d.specialization.join(" | ") : d.specialization || "";
-			const loginDate = d.lastLogin ? new Date(d.lastLogin).toLocaleDateString() : "Never";
+			const loginDate = formatDate(d.lastLogin, "Never");
 			csvRows.push(
 				[
 					`"${d.firstName || ""}"`,
@@ -630,7 +631,7 @@ const DoctorManagement = () => {
 												<span className="font-semibold text-foreground">{doctor.rating ? doctor.rating.toFixed(1) : "N/A"}</span>
 											</div>
 											<div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-												<Clock className="size-3" /> {doctor.lastLogin ? new Date(doctor.lastLogin).toLocaleDateString() : "Never"}
+												<Clock className="size-3" /> {formatDate(doctor.lastLogin, "Never")}
 											</div>
 										</TableCell>
 										<TableCell>
