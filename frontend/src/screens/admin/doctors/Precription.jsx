@@ -53,40 +53,52 @@ const DoctorPrescriptions = ({ doctorId }) => {
 					doctorBookings.map((booking) =>
 						booking.recommendedSupplements?.length > 0 ? (
 							booking.recommendedSupplements.map((s, idx) => (
-								<div key={s._id || idx} className="rounded-lg border border-border bg-muted/40 p-5">
-									<div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-										<h4 className="text-base font-semibold text-foreground">{s.medicineName}</h4>
-										<span className="text-sm font-medium text-primary">{s.dosage}</span>
-									</div>
-									<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+								<div key={s._id || idx} className="flex flex-col gap-2.5 rounded-(--jh-radius-md) border border-border bg-card p-4.5 transition-colors hover:border-(--jh-olive-leaf)/40 shadow-xs">
+									<div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-2.5">
 										<div>
-											<p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-												Duration
-											</p>
-											<p className="text-sm text-foreground/80">{s.duration}</p>
-										</div>
-										<div>
-											<p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-												Instructions
-											</p>
-											<p className="text-sm text-foreground/80">{s.instructions}</p>
-										</div>
-										<div>
-											<p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-												For Illness
-											</p>
-											<p className="text-sm text-foreground/80">{s.forIllness}</p>
-										</div>
-										<div>
-											<p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-												Patient Name
-											</p>
-											<p className="text-sm text-foreground/80">{booking.patientName}</p>
+											<span className="text-xs font-medium text-muted-foreground">Medicine Name: </span>
+											<span className="text-base font-bold text-foreground">{s.medicineName}</span>
 										</div>
 									</div>
-									<p className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
-										<Clock className="size-3.5" /> Prescribed on {formatDate(booking.createdAt)}
-									</p>
+
+									{s.dosage ? (
+										<p className="text-sm text-foreground/90">
+											<span className="font-medium text-muted-foreground">Dosage: </span>
+											<span>{s.dosage}</span>
+										</p>
+									) : null}
+
+									{s.instructions ? (
+										<p className="text-sm text-foreground/90">
+											<span className="font-medium text-muted-foreground">Instructions: </span>
+											<span className="italic">{s.instructions}</span>
+										</p>
+									) : null}
+
+									{s.forIllness ? (
+										<p className="text-sm text-foreground/90">
+											<span className="font-medium text-muted-foreground">For: </span>
+											<span>{s.forIllness}</span>
+										</p>
+									) : null}
+
+									{s.duration ? (
+										<p className="text-sm text-foreground/90">
+											<span className="font-medium text-muted-foreground">Duration: </span>
+											<span>{s.duration}</span>
+										</p>
+									) : null}
+
+									<div className="mt-1 flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-2.5 text-xs text-muted-foreground">
+										<span>
+											<strong className="text-foreground/80">Patient Name:</strong>{" "}
+											{booking.patientName}
+										</span>
+										<span>
+											<strong className="text-foreground/80">Prescription Date:</strong>{" "}
+											{formatDate(booking.createdAt || booking.dateOfAppointment)}
+										</span>
+									</div>
 								</div>
 							))
 						) : (
