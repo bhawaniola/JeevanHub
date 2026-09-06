@@ -7,6 +7,7 @@ import { BACKEND_URL } from "../../config";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { formatDate } from "@/lib/date";
 
 const NotificationBell = () => {
 	const [notifications, setNotifications] = useState([]);
@@ -97,7 +98,7 @@ const NotificationBell = () => {
 		const diffDays = Math.floor(diffHours / 24);
 		if (diffDays < 7) return `${diffDays} day ago`;
 
-		return date.toLocaleDateString();
+		return formatDate(date);
 	};
 
 	return (

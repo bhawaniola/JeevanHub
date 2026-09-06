@@ -21,17 +21,19 @@ function ServiceCard({ image, title, description, to, onClick }) {
 		<button
 			type="button"
 			onClick={onClick}
-			className="group flex flex-col overflow-hidden rounded-(--jh-radius-lg) bg-card text-left shadow-(--jh-shadow-rest) transition-[transform,box-shadow] duration-300 ease-[var(--jh-ease-organic)] hover:-translate-y-2 hover:shadow-(--jh-shadow-hover) focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+			className="group relative flex flex-col overflow-hidden rounded-(--jh-radius-lg) border border-border/80 bg-card text-left shadow-(--jh-shadow-rest) transition-all duration-300 ease-out hover:-translate-y-1.5 hover:border-(--jh-olive-leaf)/50 hover:shadow-lg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 transform-gpu cursor-pointer"
 		>
-			<div className="h-32 w-full overflow-hidden">
+			<div className="h-32 w-full overflow-hidden bg-secondary/30">
 				<img
 					src={image}
 					alt=""
-					className="size-full object-cover transition-transform duration-500 ease-[var(--jh-ease-organic)] group-hover:scale-108"
+					className="size-full object-cover transition-transform duration-300 ease-out group-hover:scale-105 transform-gpu"
 				/>
 			</div>
 			<div className="flex flex-1 flex-col gap-1 p-4">
-				<h3 className="font-display text-lg leading-tight text-foreground">{title}</h3>
+				<h3 className="font-display text-lg leading-tight text-foreground transition-colors duration-200 group-hover:text-(--jh-olive-leaf)">
+					{title}
+				</h3>
 				<p className="text-sm leading-snug text-muted-foreground">{description}</p>
 			</div>
 		</button>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+	AlertCircle,
 	Calendar,
 	ChevronDown,
 	Clock,
@@ -54,7 +55,19 @@ const STATUS_VARIANTS = {
 const PrescriptionSummary = ({ diagnosis, supplements }) => {
 	const [open, setOpen] = useState(false);
 	const count = supplements?.length || 0;
-	if (!count && !diagnosis) return null;
+	const hasDiagnosis = Boolean(diagnosis && diagnosis.trim());
+	const hasSupplements = count > 0;
+
+	let headerTitle = "Diagnosis & Prescription";
+	if (hasDiagnosis && hasSupplements) {
+		headerTitle = `Diagnosis recorded · ${count} medicine${count > 1 ? "s" : ""} prescribed`;
+	} else if (hasDiagnosis) {
+		headerTitle = `Diagnosis recorded · Medicines not provided`;
+	} else if (hasSupplements) {
+		headerTitle = `Diagnosis not provided · ${count} medicine${count > 1 ? "s" : ""} prescribed`;
+	} else {
+		headerTitle = "Diagnosis not provided · Medicines not provided";
+	}
 
 	return (
 		<div className="mt-3 rounded-(--jh-radius-md) bg-secondary/60">
@@ -62,36 +75,59 @@ const PrescriptionSummary = ({ diagnosis, supplements }) => {
 				type="button"
 				onClick={() => setOpen((o) => !o)}
 				aria-expanded={open}
-				className="flex w-full items-center gap-1.5 px-3 py-2 text-left text-xs font-semibold text-primary"
+				className="flex w-full items-center gap-1.5 px-3 py-2 text-left text-xs font-semibold text-foreground/80 hover:text-foreground"
 			>
-				<Pill size={14} />
-				{count > 0 ? `${count} medicine${count > 1 ? "s" : ""} prescribed` : "Diagnosis recorded"}
-				<ChevronDown size={14} className={cn("ml-auto transition-transform", open && "rotate-180")} />
+				<Stethoscope size={14} className={hasDiagnosis || hasSupplements ? "text-primary" : "text-muted-foreground"} />
+				<span>{headerTitle}</span>
+				<ChevronDown size={14} className={cn("ml-auto text-muted-foreground transition-transform", open && "rotate-180")} />
 			</button>
 			{open ? (
 				<div className="flex flex-col gap-2 border-t border-border px-3 pb-3 pt-2 text-sm">
-					{diagnosis ? (
+					{hasDiagnosis ? (
 						<p className="flex items-start gap-1.5 text-foreground">
-							<Stethoscope size={13} className="mt-0.5 shrink-0" /> <strong>Diagnosis:</strong> {diagnosis}
+							<Stethoscope size={13} className="mt-0.5 shrink-0 text-primary" />
+							<span><strong>Diagnosis:</strong> {diagnosis}</span>
 						</p>
-					) : null}
-					{supplements?.map((s, i) => (
-						<div key={s._id || i} className="flex flex-col gap-0.5 rounded-md bg-card px-2.5 py-2">
-							<div className="flex items-center justify-between gap-2">
-								<span className="font-semibold text-foreground">{s.medicineName}</span>
-								{s.medicineId ? (
-									<Link
-										to={`/medicines/${s.medicineId}`}
-										className="shrink-0 text-xs font-semibold text-primary hover:underline"
-									>
-										View in store
-									</Link>
-								) : null}
-							</div>
-							{s.dosage ? <span className="text-xs text-muted-foreground"><strong>Dosage:</strong> {s.dosage}</span> : null}
-							{s.instructions ? <span className="text-xs text-muted-foreground"><strong>Instructions:</strong> {s.instructions}</span> : null}
+					) : (
+						<p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+							<Stethoscope size={13} className="mt-0.5 shrink-0" />
+							<span><strong>Diagnosis:</strong> Not provided</span>
+						</p>
+					)}
+
+					{hasSupplements ? (
+						<div className="flex flex-col gap-1.5">
+							{supplements.map((s, i) => (
+								<div key={s._id || i} className="flex flex-col gap-0.5 rounded-md bg-card px-2.5 py-2">
+									<div className="flex items-center justify-between gap-2">
+										<span className="font-semibold text-foreground">
+											<span className="font-medium text-muted-foreground">Medicine: </span>
+											{s.medicineName || "Not provided"}
+										</span>
+										{s.medicineId ? (
+											<Link
+												to={`/medicines/${s.medicineId}`}
+												className="shrink-0 text-xs font-semibold text-primary hover:underline"
+											>
+												View in store
+											</Link>
+										) : null}
+									</div>
+									<span className="text-xs text-muted-foreground">
+										<strong>Dosage:</strong> {s.dosage || "Not provided"}
+									</span>
+									<span className="text-xs text-muted-foreground">
+										<strong>Instructions:</strong> {s.instructions || "Not provided"}
+									</span>
+								</div>
+							))}
 						</div>
-					))}
+					) : (
+						<p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+							<Pill size={13} className="mt-0.5 shrink-0" />
+							<span><strong>Medicines:</strong> Not provided</span>
+						</p>
+					)}
 				</div>
 			) : null}
 		</div>
@@ -185,7 +221,7 @@ const IllnessSection = ({ appointmentId, illness, editable, onSaved }) => {
 					</button>
 				) : null}
 			</span>
-			<p className="mt-1 text-sm text-foreground">{illness || "Not specified"}</p>
+			<p className="mt-1 text-sm text-foreground">{illness || "Not provided"}</p>
 		</div>
 	);
 };
@@ -330,10 +366,22 @@ const AppointmentTab = ({
 					onSaved={onIllnessUpdated}
 				/>
 
-				{(variant === "denied" || variant === "previous") && appointment.doctorsMessage ? (
-					<p className="mt-3 flex items-start gap-1.5 text-sm text-muted-foreground">
-						<MessageSquareText size={13} className="mt-0.5 shrink-0" /> {appointment.doctorsMessage}
-					</p>
+				{variant === "denied" && (
+					<div className="mt-3 rounded-(--jh-radius-md) border border-destructive/20 bg-destructive/5 p-3">
+						<span className="flex items-center gap-1.5 text-xs font-semibold text-destructive">
+							<AlertCircle size={13} /> Reason for Cancellation
+						</span>
+						<p className="mt-1 text-sm text-foreground">{appointment.doctorsMessage || "No specific reason provided by doctor."}</p>
+					</div>
+				)}
+
+				{variant === "previous" && appointment.doctorsMessage ? (
+					<div className="mt-3 rounded-(--jh-radius-md) bg-secondary/60 p-3">
+						<span className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+							<MessageSquareText size={13} /> Doctor's Note
+						</span>
+						<p className="mt-1 text-sm text-foreground">{appointment.doctorsMessage}</p>
+					</div>
 				) : null}
 
 				{variant === "upcoming" || variant === "previous" ? (

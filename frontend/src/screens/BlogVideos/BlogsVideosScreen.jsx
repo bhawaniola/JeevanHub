@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import { categoryOptions } from "./categoryOptions";
 import { BACKEND_URL } from "@/config";
+import { formatDate } from "@/lib/date";
 
 const tabs = [
 	{ value: "all", label: "All", icon: null },
@@ -164,7 +165,7 @@ function BlogsVideosScreen() {
 										/>
 									</div>
 									<div className="flex flex-1 flex-col gap-1.5 p-3.5 text-center">
-										<p className="text-xs text-muted-foreground">{new Date(item.date).toLocaleDateString()}</p>
+										<p className="text-xs text-muted-foreground">{formatDate(item.date)}</p>
 										<h3 className="line-clamp-1 text-sm font-bold text-foreground">{item.title}</h3>
 										<p className="line-clamp-2 flex-1 text-xs text-muted-foreground">{previewText}...</p>
 										<p className="text-xs font-semibold text-foreground">👤 {itemAuthor}</p>

@@ -2,6 +2,7 @@ import { Briefcase, CheckCircle2, User, AtSign, Phone, MapPin } from "lucide-rea
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { formatDate } from "@/lib/date";
 
 const RetailerProfileTab = ({ retailer }) => {
 	if (!retailer) {
@@ -13,7 +14,7 @@ const RetailerProfileTab = ({ retailer }) => {
 	const businessRows = [
 		{ label: "Business Name", value: retailer.BusinessName },
 		{ label: "License Number", value: retailer.licenseNumber },
-		{ label: "Date of Birth", value: new Date(retailer.dob).toLocaleDateString() },
+		{ label: "Date of Birth", value: formatDate(retailer.dob) },
 	];
 
 	const contactRows = [

@@ -27,27 +27,22 @@ export function MedicineForm({ bookingId, patientId, doctorId, onPrescribed }) {
 		let active = true;
 		const load = async () => {
 			try {
-				const [medsRes, suppRes] = await Promise.all([
-					fetch(`${BACKEND}/api/medicines?all=true`),
-					authFetch(`${BACKEND}/api/bookings/supplements/${bookingId}`),
-				]);
-				const meds = medsRes.ok ? await medsRes.json() : [];
-				const map = {};
-				meds.forEach((m) => {
-					map[m._id] = { thumb: resolveThumb(m.images), price: m.price };
-				});
-
+				const suppRes = await authFetch(`${BACKEND}/api/bookings/supplements/${bookingId}`);
 				const suppData = suppRes.ok ? await suppRes.json() : { supplements: [] };
-				const supps = (suppData.supplements || []).map((s) => ({
-					_id: s._id,
-					medicineId: s.medicineId,
-					medicineName: s.medicineName,
-					dosage: s.dosage || "",
-					instructions: s.instructions || "",
-					published: s.published,
-					thumb: map[s.medicineId]?.thumb || FALLBACK_IMAGE,
-					price: map[s.medicineId]?.price,
-				}));
+				const supps = (suppData.supplements || []).map((s) => {
+					const med = s.medicineId;
+					const isObj = typeof med === "object" && med !== null;
+					return {
+						_id: s._id,
+						medicineId: isObj ? med._id : med,
+						medicineName: s.medicineName,
+						dosage: s.dosage || "",
+						instructions: s.instructions || "",
+						published: s.published,
+						thumb: isObj && med.images ? resolveThumb(med.images) : FALLBACK_IMAGE,
+						price: isObj && med.price !== undefined ? med.price : undefined,
+					};
+				});
 				if (active) setRows(supps);
 			} catch (e) {
 				console.error("Error loading prescribed medicines:", e);

@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { formatDate } from "@/lib/date";
 import { authFetch } from '../../../utils/authFetch';
 import { BACKEND_URL } from '../../../config';
 
@@ -130,7 +131,7 @@ const Transactions = ({ bookings, patientId }) => {
 											{t.id}
 										</span>
 									</TableCell>
-									<TableCell className="px-6 py-3 text-foreground">{new Date(t.date).toLocaleDateString()}</TableCell>
+									<TableCell className="px-6 py-3 text-foreground">{formatDate(t.date)}</TableCell>
 									<TableCell className="px-6 py-3 font-semibold text-foreground">{t.doctor}</TableCell>
 									<TableCell className="max-w-[300px] px-6 py-3 whitespace-normal text-foreground">
 										<span className="mb-1 block">{t.description}</span>

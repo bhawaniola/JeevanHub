@@ -6,6 +6,7 @@ import { BACKEND_URL } from "../../config";
 import { DashboardShell, DashboardPageHeader } from "@/components/layout/DashboardShell";
 import { Card } from "@/components/ui/card";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { formatDate } from "@/lib/date";
 
 function RetailerAnalytics() {
 	const { auth } = useContext(AuthContext);
@@ -72,7 +73,7 @@ function RetailerAnalytics() {
 									</TableCell>
 									<TableCell>{order.items?.length}</TableCell>
 									<TableCell>₹ {order.totalPrice}</TableCell>
-									<TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+									<TableCell>{formatDate(order.createdAt)}</TableCell>
 								</TableRow>
 							))}
 						</TableBody>

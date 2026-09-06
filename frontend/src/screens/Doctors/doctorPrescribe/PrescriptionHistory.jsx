@@ -1,59 +1,247 @@
-import { useState } from "react";
-import { FileText, Link as LinkIcon, Pill, CalendarDays, Stethoscope, ClipboardList, ChevronRight } from "lucide-react";
+import { FileText, Pill, Stethoscope, Image as ImageIcon, ExternalLink } from "lucide-react";
 
 import { BACKEND_URL } from "../../../config";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { formatDate } from "@/lib/date";
 
 const BACKEND = BACKEND_URL || "http://localhost:8080";
-
-const formatDate = (dateString) => {
-	if (!dateString) return "N/A";
-	return new Date(dateString).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
-};
 
 const SharedRecordCard = ({ record }) => {
 	const isFile = record.type === "external_file";
 	const ref = record.referencedBookingId;
 	const fileUrl = record.fileUrl?.startsWith("http") ? record.fileUrl : `${BACKEND}/${record.fileUrl}`;
+	const rawDoctor = ref?.doctorName || "Doctor";
+	const doctorLabel = rawDoctor.startsWith("Dr.") ? rawDoctor : `Dr. ${rawDoctor}`;
+	
+	const isImage = isFile && /\.(jpe?g|png|webp|gif|svg)$/i.test(record.fileUrl || "");
+	const isPdf = isFile && /\.pdf$/i.test(record.fileUrl || "");
+	const fileName = isFile ? (record.fileUrl?.split("/").pop()?.split("\\").pop() || "Attached Document") : "";
 
 	return (
-		<div className="flex flex-col gap-1.5 rounded-lg border border-accent bg-accent/40 p-3.5">
-			<Badge variant="outline" className="w-fit border-accent-foreground/30 text-accent-foreground uppercase">
-				Shared by patient — unverified
-			</Badge>
-			{isFile ? (
-				<a
-					href={fileUrl}
-					target="_blank"
-					rel="noopener noreferrer"
-					className="flex items-start gap-1.5 text-sm font-medium text-accent-foreground hover:underline"
+		<div className="flex flex-col gap-2.5 rounded-lg border border-border/80 bg-secondary/50 p-3.5 shadow-xs transition-all hover:border-primary/40">
+			<div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-2">
+				<Badge
+					variant="outline"
+					className="border-accent-foreground/30 bg-accent/40 text-accent-foreground uppercase text-[10px] font-semibold tracking-wider flex items-center gap-1.5"
 				>
-					<FileText size={16} className="mt-0.5 shrink-0" /> View uploaded document
-				</a>
+					{isFile ? (
+						isImage ? (
+							<>
+								<ImageIcon size={12} className="text-primary" /> Attached Prescription (Image)
+							</>
+						) : isPdf ? (
+							<>
+								<FileText size={12} className="text-primary" /> Attached Prescription (PDF)
+							</>
+						) : (
+							<>
+								<FileText size={12} className="text-primary" /> External Document
+							</>
+						)
+					) : (
+						<>
+							<Stethoscope size={12} className="text-primary" /> Linked Platform Prescription
+						</>
+					)}
+				</Badge>
+				<span className="text-[11px] text-muted-foreground font-medium">
+					Shared {formatDate(record.uploadedAt)}
+				</span>
+			</div>
+
+			{isFile ? (
+				<div className="flex flex-col gap-2.5 py-1">
+					{isImage ? (
+						<div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 rounded-lg border border-border/70 bg-card/80 p-2.5">
+							<a
+								href={fileUrl}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="relative group shrink-0 overflow-hidden rounded-md border border-border block"
+							>
+								<img
+									src={fileUrl}
+									alt="Attached Prescription Preview"
+									className="h-20 w-28 object-cover rounded transition-transform group-hover:scale-105"
+								/>
+								<span className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity text-xs font-semibold gap-1">
+									<ExternalLink size={12} /> View
+								</span>
+							</a>
+							<div className="flex flex-col gap-1 min-w-0 flex-1">
+								<span className="text-xs font-semibold text-foreground truncate">{fileName}</span>
+								<span className="text-[11px] text-muted-foreground">Scanned Prescription / Image Document</span>
+								<a
+									href={fileUrl}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline mt-1"
+								>
+									<ExternalLink size={13} /> Open Full Size Image
+								</a>
+							</div>
+						</div>
+					) : (
+						<div className="flex items-center justify-between gap-3 rounded-lg border border-border/70 bg-card/80 p-3">
+							<div className="flex items-center gap-2.5 min-w-0">
+								<div className="rounded-md bg-destructive/10 p-2 text-destructive shrink-0">
+									<FileText size={20} />
+								</div>
+								<div className="flex flex-col min-w-0">
+									<span className="text-xs font-semibold text-foreground truncate">{fileName}</span>
+									<span className="text-[11px] text-muted-foreground">PDF Document</span>
+								</div>
+							</div>
+							<a
+								href={fileUrl}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2.5 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 shrink-0"
+							>
+								<ExternalLink size={13} /> View PDF
+							</a>
+						</div>
+					)}
+				</div>
 			) : ref ? (
-				<div className="flex items-start gap-1.5 text-sm font-medium text-accent-foreground">
-					<LinkIcon size={16} className="mt-0.5 shrink-0" />
-					<span>
-						Prescription from Dr. {ref.doctorName} on {formatDate(ref.dateOfAppointment)}
-						{ref.recommendedSupplements?.length > 0 ? (
-							<> — {ref.recommendedSupplements.map((s) => s.medicineName).join(", ")}</>
-						) : null}
-					</span>
+				<div className="flex flex-col gap-2 text-xs">
+					<div className="flex flex-wrap items-center justify-between gap-1.5">
+						<div>
+							<strong className="text-foreground">Prescribing Doctor:</strong>{" "}
+							<span className="font-semibold text-foreground">{doctorLabel}</span>
+						</div>
+						<div className="text-muted-foreground">
+							<strong className="text-foreground/80">Prescription Date:</strong> {formatDate(ref.dateOfAppointment)}
+						</div>
+					</div>
+
+					<div>
+						<strong className="text-foreground">Reason for Visit:</strong>{" "}
+						<span className="text-foreground/90">{ref.patientIllness || <span className="italic text-muted-foreground">Not provided</span>}</span>
+					</div>
+
+					<div>
+						<strong className="text-foreground">Diagnosis:</strong>{" "}
+						<span className="text-foreground/90">{ref.diagnosis || <span className="italic text-muted-foreground">Not provided</span>}</span>
+					</div>
+
+					{ref.recommendedSupplements?.length > 0 ? (
+						<div className="rounded-md bg-card/90 p-2.5 border border-border/60">
+							<p className="font-semibold text-foreground mb-2 flex items-center gap-1.5 text-xs">
+								<Pill size={12} className="text-(--jh-olive-leaf)" /> Prescribed Medicines ({ref.recommendedSupplements.length}):
+							</p>
+							<div className="flex flex-col gap-2">
+								{ref.recommendedSupplements.map((med, idx) => (
+									<div key={med._id || idx} className="flex flex-col gap-1 rounded bg-secondary/40 p-2 border border-border/50 text-[11px]">
+										<div>
+											<strong className="text-foreground">Medicine Name:</strong>{" "}
+											<span className="font-semibold text-foreground">{med.medicineName || "Not provided"}</span>
+										</div>
+										<div>
+											<strong className="text-foreground">Dosage:</strong>{" "}
+											<span className="text-foreground/90">{med.dosage || <span className="italic text-muted-foreground">Not provided</span>}</span>
+										</div>
+										<div>
+											<strong className="text-foreground">Instructions:</strong>{" "}
+											<span className="text-foreground/90">{med.instructions ? <span className="italic text-muted-foreground">{med.instructions}</span> : <span className="italic text-muted-foreground">Not provided</span>}</span>
+										</div>
+									</div>
+								))}
+							</div>
+						</div>
+					) : (
+						<div>
+							<strong className="text-foreground">Medicines:</strong>{" "}
+							<span className="italic text-muted-foreground">Not provided</span>
+						</div>
+					)}
 				</div>
 			) : (
-				<span className="text-sm font-medium text-accent-foreground">This reference is no longer available.</span>
+				<span className="text-xs font-medium text-muted-foreground italic">This referenced prescription is no longer available.</span>
 			)}
-			{record.note ? <p className="text-sm text-muted-foreground italic">&quot;{record.note}&quot;</p> : null}
-			<span className="text-xs font-semibold text-accent-foreground">Shared {formatDate(record.uploadedAt)}</span>
+
+			{record.note ? (
+				<div className="border-t border-border/50 pt-2 text-xs">
+					<strong className="text-foreground">Patient Note:</strong>{" "}
+					<span className="italic text-muted-foreground">&quot;{record.note}&quot;</span>
+				</div>
+			) : null}
+		</div>
+	);
+};
+
+const PreviousPrescriptionCard = ({ booking }) => {
+	const count = booking.recommendedSupplements?.length || 0;
+
+	return (
+		<div className="flex flex-col gap-2.5 rounded-lg border border-border/80 bg-secondary/50 p-3.5 shadow-xs transition-all hover:border-primary/40">
+			<div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-2">
+				<Badge
+					variant="outline"
+					className="border-accent-foreground/30 bg-accent/40 text-accent-foreground uppercase text-[10px] font-semibold tracking-wider flex items-center gap-1.5"
+				>
+					<Stethoscope size={12} className="text-primary" /> Past Consultation Record
+				</Badge>
+				<span className="text-[11px] text-muted-foreground font-medium">
+					Prescription Date: {formatDate(booking.dateOfAppointment)}
+				</span>
+			</div>
+
+			<div className="flex flex-col gap-2 text-xs">
+				<div>
+					<strong className="text-foreground">Reason for Visit:</strong>{" "}
+					<span className="text-foreground/90">{booking.patientIllness || <span className="italic text-muted-foreground">Not provided</span>}</span>
+				</div>
+
+				<div>
+					<strong className="text-foreground">Diagnosis:</strong>{" "}
+					<span className="text-foreground/90">{booking.diagnosis || <span className="italic text-muted-foreground">Not provided</span>}</span>
+				</div>
+
+				{count > 0 ? (
+					<div className="rounded-md bg-card/90 p-2.5 border border-border/60">
+						<p className="font-semibold text-foreground mb-2 flex items-center gap-1.5 text-xs">
+							<Pill size={12} className="text-(--jh-olive-leaf)" /> Prescribed Medicines ({count}):
+						</p>
+						<div className="flex flex-col gap-2">
+							{booking.recommendedSupplements.map((med, idx) => (
+								<div key={med._id || idx} className="flex flex-col gap-1 rounded bg-secondary/40 p-2 border border-border/50 text-[11px]">
+									<div>
+										<strong className="text-foreground">Medicine Name:</strong>{" "}
+										<span className="font-semibold text-foreground">{med.medicineName || "Not provided"}</span>
+									</div>
+									<div>
+										<strong className="text-foreground">Dosage:</strong>{" "}
+										<span className="text-foreground/90">{med.dosage || <span className="italic text-muted-foreground">Not provided</span>}</span>
+									</div>
+									<div>
+										<strong className="text-foreground">Instructions:</strong>{" "}
+										<span className="text-foreground/90">{med.instructions ? <span className="italic text-muted-foreground">{med.instructions}</span> : <span className="italic text-muted-foreground">Not provided</span>}</span>
+									</div>
+								</div>
+							))}
+						</div>
+					</div>
+				) : (
+					<div>
+						<strong className="text-foreground">Medicines:</strong>{" "}
+						<span className="italic text-muted-foreground">Not provided</span>
+					</div>
+				)}
+
+				{booking.doctorsMessage ? (
+					<div className="border-t border-border/50 pt-2 text-xs">
+						<strong className="text-foreground">Doctor Note:</strong>{" "}
+						<span className="italic text-muted-foreground">&quot;{booking.doctorsMessage}&quot;</span>
+					</div>
+				) : null}
+			</div>
 		</div>
 	);
 };
 
 export function PrescriptionHistory({ prescriptions, loading, sharedRecords = [], currentBookingId }) {
-	const [selected, setSelected] = useState(null);
-
 	const past = (Array.isArray(prescriptions) ? prescriptions : [])
 		.filter((b) => b._id !== currentBookingId)
 		.filter((b) => (b.recommendedSupplements || []).length > 0 || b.diagnosis)
@@ -94,74 +282,13 @@ export function PrescriptionHistory({ prescriptions, loading, sharedRecords = []
 						No previous prescriptions for this patient yet.
 					</p>
 				) : (
-					<div className="flex flex-col gap-2">
+					<div className="grid gap-2.5">
 						{past.map((booking) => (
-							<button
-								key={booking._id}
-								className="flex w-full flex-col gap-1.5 rounded-lg border border-border bg-muted/40 p-3 text-left transition-all hover:border-primary hover:bg-card"
-								onClick={() => setSelected(booking)}
-							>
-								<div className="flex items-center justify-between">
-									<span className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-										<CalendarDays size={16} /> {formatDate(booking.dateOfAppointment)}
-									</span>
-								</div>
-								<div className="line-clamp-2 text-sm font-bold text-foreground">
-									{booking.diagnosis || <span className="font-medium text-muted-foreground italic">No diagnosis recorded</span>}
-								</div>
-								<div className="mt-0.5 flex items-center justify-between">
-									<Badge variant="secondary" className="gap-1">
-										<Pill size={13} /> {booking.recommendedSupplements.length}
-									</Badge>
-									<ChevronRight size={18} className="shrink-0 text-muted-foreground" />
-								</div>
-							</button>
+							<PreviousPrescriptionCard key={booking._id} booking={booking} />
 						))}
 					</div>
 				)}
 			</div>
-
-			<Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
-				<DialogContent className="max-w-lg">
-					{selected ? (
-						<>
-							<DialogHeader>
-								<DialogTitle>Prescription — {formatDate(selected.dateOfAppointment)}</DialogTitle>
-							</DialogHeader>
-							<p className="flex items-center gap-2 text-sm text-foreground/80">
-								<Stethoscope size={15} className="shrink-0 text-primary" />
-								<strong className="text-foreground">Diagnosis:</strong> {selected.diagnosis || "Not recorded"}
-							</p>
-
-							<div className="flex flex-col gap-3.5">
-								{selected.recommendedSupplements.length === 0 ? (
-									<p className="text-sm text-muted-foreground">No medicines were prescribed on this visit.</p>
-								) : (
-									selected.recommendedSupplements.map((s, idx) => (
-										<div key={s._id || idx} className="flex flex-col gap-2 rounded-lg border border-border bg-muted/40 p-4">
-											<div className="flex items-center gap-2 text-base font-bold text-primary">
-												<Pill size={16} /> {s.medicineName}
-											</div>
-											<div className="flex items-start gap-2 text-sm text-muted-foreground">
-												<ClipboardList size={14} className="mt-0.5 shrink-0" />
-												<span>
-													<strong className="text-foreground">Dosage:</strong> {s.dosage || "—"}
-												</span>
-											</div>
-											<div className="flex items-start gap-2 text-sm text-muted-foreground">
-												<ClipboardList size={14} className="mt-0.5 shrink-0" />
-												<span>
-													<strong className="text-foreground">Instructions:</strong> {s.instructions || "—"}
-												</span>
-											</div>
-										</div>
-									))
-								)}
-							</div>
-						</>
-					) : null}
-				</DialogContent>
-			</Dialog>
 		</Card>
 	);
 }

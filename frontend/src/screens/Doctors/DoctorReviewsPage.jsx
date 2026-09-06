@@ -4,6 +4,7 @@ import { Star } from "lucide-react";
 import { BACKEND_URL } from "../../config";
 import { DashboardShell, DashboardPageHeader } from "@/components/layout/DashboardShell";
 import { Card } from "@/components/ui/card";
+import { formatDate } from "@/lib/date";
 
 const DoctorReviewsPage = () => {
 	const [reviews, setReviews] = useState([]);
@@ -33,7 +34,7 @@ const DoctorReviewsPage = () => {
 								</p>
 								<p className="mt-2 text-sm italic text-foreground/80">{r.review}</p>
 								<p className="mt-2 text-xs text-muted-foreground">
-									Date: {new Date(r.dateOfAppointment).toLocaleDateString()}
+									Date: {formatDate(r.dateOfAppointment)}
 								</p>
 							</Card>
 						))}

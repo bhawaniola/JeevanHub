@@ -768,7 +768,7 @@ exports.getOwnBookingsForSharing = async (req, res) => {
 		}
 
 		const bookings = await Booking.find(filter)
-			.select('doctorName dateOfAppointment recommendedSupplements')
+			.select('doctorName dateOfAppointment recommendedSupplements diagnosis patientIllness')
 			.sort({ dateOfAppointment: -1 });
 
 		return res.status(200).json({ bookings });
@@ -1468,7 +1468,10 @@ exports.getRecommendedSupplements = async (req, res) => {
 	const { id } = req.params;
 
 	try {
-		const booking = await Booking.findById(id);
+		const booking = await Booking.findById(id).populate({
+			path: 'recommendedSupplements.medicineId',
+			select: 'images price name category quantity'
+		});
 
 		if (!booking) {
 			return res.status(404).json({ error: "Booking not found" });
@@ -1761,7 +1764,7 @@ exports.getBookingById = async (req, res) => {
 	try {
 		const booking = await Booking.findById(id)
 			.populate('patientId', 'firstName lastName email phone gender age zipCode address profileImage')
-			.populate('patientSharedRecords.referencedBookingId', 'doctorName dateOfAppointment recommendedSupplements');
+			.populate('patientSharedRecords.referencedBookingId', 'doctorName dateOfAppointment recommendedSupplements diagnosis patientIllness');
 
 		if (!booking) {
 			return res.status(404).json({ error: "Booking not found" });
@@ -1799,14 +1802,46 @@ exports.getDoctorPatientHistory = async (req, res) => {
 			return res.status(400).json({ error: "Doctor ID is required" });
 		}
 
-		const bookings = await Booking.find({
-			doctorId,
-			patientId,
-			requestAccept: 'accepted',
-			dateOfAppointment: { $lt: new Date() }
-		}).sort({ dateOfAppointment: -1 });
+		const [bookings, doctor] = await Promise.all([
+			Booking.find({
+				doctorId,
+				patientId,
+				requestAccept: 'accepted',
+				dateOfAppointment: { $lt: new Date() }
+			}).sort({ dateOfAppointment: -1 }),
+			Doctor.findById(doctorId)
+		]);
 
-		return res.status(200).json({ bookings });
+		const processedBookings = bookings.map(booking => {
+			const bookingObj = booking.toObject ? booking.toObject() : booking;
+
+			if (doctor && doctor.availableSlots && booking.slotId) {
+				const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date(booking.dateOfAppointment).getDay()];
+				const baseSlots = doctor.availableSlots[dayName] || [];
+				const baseSlot = baseSlots.find(s => s._id && s._id.toString() === booking.slotId.toString());
+				if (baseSlot) {
+					bookingObj.timeSlot = baseSlot.startTime;
+					bookingObj.timeSlotDuration = baseSlot.duration;
+				}
+			}
+
+			if (doctor && Array.isArray(doctor.scheduleOverrides) && booking.slotId) {
+				const bookingDateStr = new Date(booking.dateOfAppointment).toDateString();
+				const override = doctor.scheduleOverrides.find(o => {
+					return new Date(o.date).toDateString() === bookingDateStr &&
+						   o.targetSlotId && o.targetSlotId.toString() === booking.slotId.toString();
+				});
+
+				if (override && override.type === 'rescheduled') {
+					bookingObj.timeSlot = override.newStartTime;
+					if (override.newDuration) bookingObj.timeSlotDuration = override.newDuration;
+				}
+			}
+
+			return bookingObj;
+		});
+
+		return res.status(200).json({ bookings: processedBookings });
 	} catch (error) {
 		console.error("Error fetching doctor-patient history:", error);
 		return res.status(500).json({ error: "Server error" });

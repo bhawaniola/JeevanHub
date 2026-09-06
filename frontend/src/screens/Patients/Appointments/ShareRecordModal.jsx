@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PatientVerificationPanel } from "@/components/PatientVerificationPanel";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/date";
 import { AuthContext } from "../../../context/AuthContext";
 import { authFetch } from "../../../utils/authFetch";
 import { BACKEND_URL } from "../../../config";
@@ -244,8 +245,12 @@ const ShareRecordModal = ({ bookingId, onClose, onShared, initialMode = "upload"
 									onValueChange={setSelectedBookingId}
 									items={ownBookings.map((b) => ({
 										value: b._id,
-										label: `Dr. ${b.doctorName} — ${new Date(b.dateOfAppointment).toLocaleDateString()}${
-											b.recommendedSupplements?.length > 0
+										label: `Dr. ${b.doctorName} — ${formatDate(b.dateOfAppointment)}${
+											b.diagnosis
+												? ` (${b.diagnosis})`
+												: b.patientIllness
+												? ` (${b.patientIllness})`
+												: b.recommendedSupplements?.length > 0
 												? ` (${b.recommendedSupplements.map((s) => s.medicineName).join(", ")})`
 												: ""
 										}`,
@@ -257,8 +262,12 @@ const ShareRecordModal = ({ bookingId, onClose, onShared, initialMode = "upload"
 									<SelectContent>
 										{ownBookings.map((b) => (
 											<SelectItem key={b._id} value={b._id}>
-												Dr. {b.doctorName} — {new Date(b.dateOfAppointment).toLocaleDateString()}
-												{b.recommendedSupplements?.length > 0
+												Dr. {b.doctorName} — {formatDate(b.dateOfAppointment)}
+												{b.diagnosis
+													? ` (${b.diagnosis})`
+													: b.patientIllness
+													? ` (${b.patientIllness})`
+													: b.recommendedSupplements?.length > 0
 													? ` (${b.recommendedSupplements.map((s) => s.medicineName).join(", ")})`
 													: ""}
 											</SelectItem>
@@ -267,6 +276,39 @@ const ShareRecordModal = ({ bookingId, onClose, onShared, initialMode = "upload"
 								</Select>
 							)}
 						</div>
+
+						{(() => {
+							const selectedBooking = ownBookings.find((b) => b._id === selectedBookingId);
+							if (!selectedBooking) return null;
+							return (
+								<div className="flex flex-col gap-1.5 rounded-lg border border-border/80 bg-secondary/40 p-3 text-xs">
+									<div className="flex items-center justify-between font-semibold text-foreground border-b border-border/50 pb-1.5">
+										<span>Dr. {selectedBooking.doctorName}</span>
+										<span className="text-muted-foreground font-normal">{formatDate(selectedBooking.dateOfAppointment)}</span>
+									</div>
+									{selectedBooking.patientIllness ? (
+										<div>
+											<strong className="text-foreground">Reason for Visit:</strong>{" "}
+											<span className="text-foreground/90">{selectedBooking.patientIllness}</span>
+										</div>
+									) : null}
+									{selectedBooking.diagnosis ? (
+										<div>
+											<strong className="text-foreground">Diagnosis:</strong>{" "}
+											<span className="text-foreground/90">{selectedBooking.diagnosis}</span>
+										</div>
+									) : null}
+									{selectedBooking.recommendedSupplements?.length > 0 ? (
+										<div>
+											<strong className="text-foreground">Medicines ({selectedBooking.recommendedSupplements.length}):</strong>{" "}
+											<span className="text-foreground/90">
+												{selectedBooking.recommendedSupplements.map((s) => s.medicineName).join(", ")}
+											</span>
+										</div>
+									) : null}
+								</div>
+							);
+						})()}
 
 						<div className="flex flex-col gap-1.5">
 							<Label htmlFor="share-record-note">Note (optional)</Label>
